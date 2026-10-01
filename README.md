@@ -29,7 +29,7 @@ The agent drafts, you sign off. Design happens at your altitude (module boundari
 | Skill | What it does | Status |
 |-------|--------------|--------|
 | `/flow:design` | Design phase for one feature: batched question rounds with recommended answers, a visible assumption ledger, a full interface spec, Design-It-Twice variants for load-bearing interfaces, and a hard sign-off gate. Writes `thoughts/shared/designs/YYYY-MM-DD-<slug>.md` on a feature branch. | ✅ v0.1 |
-| `/flow:plan` | Atomic, self-verifying implementation plan built from the signed design | Planned |
+| `/flow:plan` | Plan phase for one feature: commit-sized steps, each buildable and verifiable from the plan header plus that step alone — exact files, signatures, scope (including what must not change), and a literal verify command. Design is recommended, not required. One sign-off. Writes `thoughts/shared/plans/YYYY-MM-DD-<slug>.md`. | ✅ v0.2 |
 | `step-reviewer` | Fresh-context subagent that reviews each step's diff against its spec | Planned |
 | `/flow:implement` | Step loop: check → implement → independent review → auto-commit | Planned |
 
