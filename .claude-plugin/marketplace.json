@@ -1,0 +1,17 @@
+{
+  "name": "dhruvnigam93",
+  "description": "Dhruv Nigam's Claude Code skills, starting with an alignment-first AI coding workflow.",
+  "owner": {
+    "name": "Dhruv Nigam",
+    "url": "https://github.com/dhruvnigam93"
+  },
+  "plugins": [
+    {
+      "name": "flow",
+      "source": "./plugins/flow",
+      "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation.",
+      "category": "development",
+      "tags": ["workflow", "design", "planning", "architecture"]
+    }
+  ]
+}
