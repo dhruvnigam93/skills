@@ -30,7 +30,7 @@ The agent drafts, you sign off. Design happens at your altitude (module boundari
 |-------|--------------|--------|
 | `/flow:design` | Design phase for one feature: batched question rounds with recommended answers, a visible assumption ledger, a full interface spec, Design-It-Twice variants for load-bearing interfaces, and a hard sign-off gate. Writes `thoughts/shared/designs/YYYY-MM-DD-<slug>.md` on a feature branch. | ✅ v0.1 |
 | `/flow:plan` | Plan phase for one feature: commit-sized steps, each buildable and verifiable from the plan header plus that step alone — exact files, signatures, scope (including what must not change), and a literal verify command. Design is recommended, not required. One sign-off. Writes `thoughts/shared/plans/YYYY-MM-DD-<slug>.md`. | ✅ v0.2 |
-| `step-reviewer` | Fresh-context subagent that reviews each step's diff against its spec | Planned |
+| `flow:step-reviewer` | Fresh-context subagent that `/flow:implement` dispatches after each step. It runs the step's verify command itself, checks the diff against the step (files, must-not-change, signatures), and returns APPROVE (with non-blocking notes), BLOCK (implementer fixes) or ESCALATE (needs your decision). Appends its verdict to the step's review note. | ✅ v0.3 |
 | `/flow:implement` | Step loop: check → implement → independent review → auto-commit | Planned |
 
 The full roadmap (15 skills) is in [Part 3 of the spec](docs/ai-coding-workflow.md#part-3--skills-to-build).
@@ -52,6 +52,7 @@ claude plugin validate .   # run after every edit
 plugins/flow/
   .claude-plugin/plugin.json      # plugin manifest (bump "version" to ship an update)
   skills/<skill>/SKILL.md         # one folder per skill, with references/ and templates/
+  agents/<agent>.md               # subagents the skills dispatch
 docs/                             # the workflow spec
 ```
 
