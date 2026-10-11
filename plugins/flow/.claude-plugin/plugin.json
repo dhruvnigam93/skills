@@ -1,6 +1,6 @@
 {
   "name": "flow",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation.",
   "author": {
     "name": "Dhruv Nigam",
