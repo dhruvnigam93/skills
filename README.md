@@ -54,6 +54,16 @@ plugins/flow/
   skills/<skill>/SKILL.md         # one folder per skill, with references/ and templates/
   agents/<agent>.md               # subagents the skills dispatch
 docs/                             # the workflow spec
+BUILD-STATUS.md                   # build ledger — tracks which skills are done, decisions, next up
+reference/
+  research/                       # our analogue studies + usage-pattern analysis + deep research
+  inspiration/
+    humanlayer/                   # HumanLayer's agents + commands (ghuntley/humanlayer)
+    superpowers/                  # obra/superpowers skills — SDD, review prompts, writing-plans
+    mattpocock/                   # mattpocock/skills — implement, tdd, code-review, retro
+  design-eval/                    # A/B test artifacts from the /design skill build
+  handoffs/                       # session transition docs
+tools/                            # md2pdf and other build-time scripts
 ```
 
 ## License
