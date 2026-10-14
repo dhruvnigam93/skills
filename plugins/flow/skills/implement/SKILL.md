@@ -10,13 +10,15 @@ argument-hint: "[path to plan]"
 
 # Implement Phase
 
-Work through a signed `/flow:plan` plan one step at a time. Each step: implement → verify green → independent review → auto-commit. The plan file is the durable progress ledger — fill it in as you go.
+Work through a signed `/flow:plan` plan one step at a time. Each step: implement → verify green → review gate (independent review if >3 files or >200 lines) → auto-commit. The plan file is the durable progress ledger — fill it in as you go.
 
 ## Iron Law
 
 ```
-NO COMMIT WITHOUT A PASSING INDEPENDENT REVIEW
+NO LARGE-STEP COMMIT WITHOUT A PASSING INDEPENDENT REVIEW
 ```
+
+"Large" is mechanical, not a judgement call — see 2f. Small steps skip the reviewer and commit after green verify.
 
 ## Process
 
@@ -67,7 +69,23 @@ Run the step's `Verify:` command(s). All must pass with the expected output.
 
 If the step has a `Decision:` field: run the observation command, record what you observed in `Impl note:`, follow the matching fork. If the observation matches no named fork — ESCALATE. If following a fork would change a signature in the signed design's Interface Spec — **hard stop**, that is a design change.
 
-#### 2f. Independent review
+#### 2f. Review gate (deterministic)
+
+Measure the step's change, excluding the plan file:
+
+```
+git add -N <files from Files:>
+git diff --numstat <base> -- . ':!<plan-path>'
+```
+
+- **files** = number of rows; **lines** = sum of added + deleted (binary rows count as 0 lines, 1 file).
+- **files > 3 OR lines > 200** → review required (below).
+- Otherwise → **skip the reviewer**. Add `**Review note:** skipped — N files, M lines (under threshold)` to the step, then commit as in 2g.
+- A `Decision:` step, or one that touches a signature in the design's Interface Spec, is reviewed regardless of size.
+
+Do not override the gate by feel in either direction. Re-measure after any BLOCK fix; if a step first reviewed then shrinks, it stays reviewed.
+
+#### 2f-i. Independent review
 
 Record the base commit (`git rev-parse HEAD` before this step's changes — or the base from a handoff note on resume).
 
@@ -91,7 +109,7 @@ Wait for the verdict. Parse the first line of the report: `VERDICT: APPROVE`, `V
 
 | Verdict | Action |
 |---------|--------|
-| **APPROVE** | Commit and continue to next step. |
+| **APPROVE** (or gate skipped review) | Commit and continue to next step. |
 | **BLOCK** | Fix your code (not the step spec). Re-dispatch the reviewer. Max **3 review cycles** — after 3 BLOCKs, pause: "Step N blocked 3 times. Reviewer keeps finding: [reasons]. Your call." |
 | **ESCALATE** | Pause. Show the user the reviewer's full report — the decision, options, and recommendation. Wait. |
 
@@ -141,7 +159,8 @@ Never push through. A degraded agent makes mistakes that waste more time than a 
 | "The reviewer will be fine with this extra file." | If it's not in `Files:`, don't touch it. |
 | "This test is wrong, let me fix it." | The test is the step's contract. ESCALATE. |
 | "I'll just adjust the signature slightly." | If it's in `Adds:`, match it exactly. If the design is wrong, ESCALATE. |
-| "The reviewer blocked on something trivial, I'll skip re-review." | No commit without a passing review. The iron law. |
+| "The reviewer blocked on something trivial, I'll skip re-review." | If a review was required, no commit without a passing one. The iron law. |
+| "This small step feels risky, I'll review it anyway" / "This big one is simple, skip." | The gate is files > 3 or lines > 200. Follow the numbers. |
 | "I can finish one more step before handing off." | If you're at 60%, you can't. Commit and stop. |
 | "I'll commit all the steps together at the end." | Each step is a commit. Atomic, reviewable increments. |
 | "I'll just work around the missing file." | Note it in Impl note, ESCALATE. The plan missed something — that's plan-level, not implementation-level. |

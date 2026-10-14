@@ -3,7 +3,7 @@ name: step-reviewer
 description: >-
   Fresh-context review of one plan step's change before it is committed. Use
   after a step from a /flow:plan plan has been implemented and its checks run;
-  /flow:implement dispatches it for every step. Pass the plan path, the step
+  /flow:implement dispatches it only for steps over the size gate (>3 files or >200 lines). Pass the plan path, the step
   number, the base commit, and any BLOCK reasons from the previous review.
 tools: Read, Grep, Glob, Bash, Edit
 model: sonnet
