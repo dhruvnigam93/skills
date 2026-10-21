@@ -113,7 +113,7 @@ Wait for the verdict. Parse the first line of the report: `VERDICT: APPROVE`, `V
 | **BLOCK** | Fix your code (not the step spec). Re-dispatch the reviewer. Max **3 review cycles** — after 3 BLOCKs, pause: "Step N blocked 3 times. Reviewer keeps finding: [reasons]. Your call." |
 | **ESCALATE** | Pause. Show the user the reviewer's full report — the decision, options, and recommendation. Wait. |
 
-**Commit on APPROVE:** stage only the files in `Files:` plus the plan file. Never `git add -A`. Message:
+**Commit on APPROVE or a skipped review (and every other commit in this skill: the `status: done` commit, the handoff note):** always invoke the `commit` skill via the Skill tool. Never run a bare `git commit`, because the harness adds a `Co-Authored-By: Claude` trailer to commits made without the skill, and the skill's attribution rules (no `Co-Authored-By`, no "Generated with", no AI metadata) are what strip it. The plan sign-off plus the reviewer's APPROVE (or the gate's skip) counts as the user's approval, so skip the skill's "Shall I proceed?" prompt and commit straight away. Stage only the files in `Files:` plus the plan file. Never `git add -A`. Message:
 
 ```
 feat(<scope>): step N — <step title>
@@ -162,6 +162,7 @@ Never push through. A degraded agent makes mistakes that waste more time than a 
 | "The reviewer blocked on something trivial, I'll skip re-review." | If a review was required, no commit without a passing one. The iron law. |
 | "This small step feels risky, I'll review it anyway" / "This big one is simple, skip." | The gate is files > 3 or lines > 200. Follow the numbers. |
 | "I can finish one more step before handing off." | If you're at 60%, you can't. Commit and stop. |
+| "A quick `git commit` is faster than the commit skill." | Bare commits get a Claude co-author trailer. Always use the `commit` skill. |
 | "I'll commit all the steps together at the end." | Each step is a commit. Atomic, reviewable increments. |
 | "I'll just work around the missing file." | Note it in Impl note, ESCALATE. The plan missed something — that's plan-level, not implementation-level. |
 | "I remember what Step N says from reading it earlier." | You remember a summary. The step has the exact values, signatures, and test cases. Read it. |
