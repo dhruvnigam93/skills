@@ -59,6 +59,6 @@ Return exactly these five sections:
 
 2. **Compare in prose** on depth, locality, and seam placement (what varies across the seam, how many adapters are justified).
 
-3. **Give an opinionated recommendation.** A strong read, not a menu. State which design you think is strongest and why. If elements from different designs combine well, propose a hybrid with specifics.
+3. **No recommendation.** Do not say which design you think is strongest. If elements from different designs combine well, describe the hybrid with specifics as one more variant, without advocating it.
 
-4. **The user picks.** Record the result in the design doc's Load-Bearing Interfaces slot, rejected variants as "considered because..." lines.
+4. **The user picks** — one question through the question tool (see SKILL.md, **Asking the user**): one option per variant (and the hybrid, if any). Each option's `preview` holds that variant's interface so the user can compare them side by side; its `description` gives the main trade-off. Record the result in the design doc's Load-Bearing Interfaces slot, rejected variants as "considered because..." lines.

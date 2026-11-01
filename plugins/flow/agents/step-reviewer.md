@@ -101,13 +101,14 @@ Notes (non-blocking):
 - `src/orders/cancel.py:42` — rename `o` → `order`
 ```
 
-An ESCALATE report also gives the decision the user must make, the options, and your recommendation:
+An ESCALATE report also gives the decision the user must make and the options, each with what it would mean. No recommendation: `/flow:implement` asks the user this as a question with your options, and the user decides without one.
 ```
 VERDICT: ESCALATE
 
 Decision needed: the step can't pass without adding `refund_id` to `Order` in `src/orders/models.py`, which isn't in Files: and changes a model the design names.
-Options: (a) add the field, which is a design change; (b) read the refund id from the gateway response instead.
-Recommend: (b), because it needs no model change.
+Options:
+(a) Add the field — a design change to `Order`; the design doc needs a revision first.
+(b) Read the refund id from the gateway response — no model change; the id isn't stored, so later lookups go back to the gateway.
 
 Evidence:
 …

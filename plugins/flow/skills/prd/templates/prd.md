@@ -26,7 +26,7 @@ if available (support tickets, usage data, user feedback). 1–3 paragraphs.
 
 | # | Assumption | Status | Basis |
 |---|-----------|--------|-------|
-| 1 | Example | VERIFIED | User confirmed, round 1 |
+| 1 | Example | VERIFIED | User confirmed, Q1 |
 
 Status: VERIFIED (user confirmed) · ASSUMED (safe default after "enough") · UNVERIFIED (still open — none in a signed-off doc).
 
@@ -59,6 +59,6 @@ systems. "None" if none.
 
 ## Open Questions
 
-Questions that remain after the rounds — resolved during /design, not here.
+Questions still open after the alignment questions — resolved during /design, not here.
 "None" if all questions are resolved.
 ```

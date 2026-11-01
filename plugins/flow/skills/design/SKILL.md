@@ -29,11 +29,12 @@ NO PLANNING OR CODE WITHOUT A SIGNED DESIGN
 
 ### Phase 0: Isolate (branch/worktree)
 
-Before writing any artifact, isolate the feature. If you are on the default branch (`main`/`master`), do not write the design doc there — propose a branch and create it on confirm:
+Before writing any artifact, isolate the feature. If you are on the default branch (`main`/`master`), do not write the design doc there — ask, as one question through the question tool, how to isolate it, and create it on the answer:
 
-> "I'll branch `feat/<kebab-desc>` off main for this — or want a worktree (parallel work / greenfield)?"
+- **Branch `feat/<kebab-desc>`** — off main, in this checkout.
+- **Worktree** — its own folder and branch, for parallel work or greenfield/ralph.
 
-Default to a **branch**; use a **worktree** when the user wants parallel isolation or it's greenfield/ralph. Always branch from main unless otherwise specified. The whole feature — design doc → plan → code → the kb/ updates it makes true — then lives on this branch and merges to main as one unit (kb/ and thoughts/ are git-tracked, never gitignored). If a signed design doc for this feature already exists on a branch, resume there instead of branching again.
+No recommended option (see **Asking the user**). Always branch from main unless otherwise specified. The whole feature — design doc → plan → code → the kb/ updates it makes true — then lives on this branch and merges to main as one unit (kb/ and thoughts/ are git-tracked, never gitignored). If a signed design doc for this feature already exists on a branch, resume there instead of branching again.
 
 ### Phase 1: Self-Research
 
@@ -54,40 +55,38 @@ Also read these files if they exist (skip silently if not):
 
 If the user linked a prior `/research` doc, read it fully. If you dispatched subagents, wait for all of them before Phase 2.
 
-### Phase 2: Batched Question Rounds
+### Phase 2: Questions, One at a Time
 
-Ask questions in **batched rounds of 3-5**, most important first. This is a deliberate choice over one-question-at-a-time grilling — the user prefers efficient rounds.
+Ask questions **one at a time**, most important first, following **Asking the user** below. Choose each question after hearing the last answer — a batch buries the important questions and can't build on an answer.
 
-Every question carries a **recommended answer** with a one-line rationale. The user can accept the recommendation with one word ("yes", "sounds right", "go with that").
+**Keep the assumption ledger current after every answer.** Render it in full before the first question and again when the questions end; between questions, one line on what the last answer changed is enough.
 
-**Render the assumption ledger table at the top of every round** and update it as the user responds.
-
-Good round:
+Good first question:
 ```
 ## Assumption Ledger
 
 | # | Assumption | Status | Basis |
 |---|-----------|--------|-------|
-| (first round — ledger empty) |
+| 1 | Cancellation is per order, not per item | VERIFIED | `OrderService.cancel()` takes an order id |
+| 2 | A cancelled order's record must survive | UNVERIFIED | — |
 
-### Round 1
-
-1. Should cancelled orders be soft-deleted or hard-deleted?
-   Recommended: soft-delete (preserves audit trail for compliance).
-
-2. Do refunds route through the original payment gateway?
-   Recommended: yes (simplifies reconciliation, avoids dual-gateway complexity).
-
-3. Maximum order age for cancellation?
-   Recommended: 30 days (matches industry chargeback window).
+AskUserQuestion (one question):
+  header:   "Deletion"
+  question: "When an order is cancelled, should its row be kept or removed?"
+  options:
+    - Soft-delete: "Row stays with a cancelled_at timestamp. The audit trail survives;
+                    every order query must filter cancelled rows out."
+    - Hard-delete: "Row is removed. Queries stay simple; no record of the
+                    cancellation survives."
 ```
 
-What makes this good: each question targets a decision the codebase could not answer; recommended answers are grounded in concrete rationale (compliance, reconciliation, industry standard); three questions, not twelve.
+What makes this good: it targets a decision the codebase could not answer; each option states its consequence, so the user can choose without a recommendation; nothing marks an option as preferred; the next question waits for this answer.
 
 Bad questions:
 - "What does the current order model look like?" — the codebase told you this in Phase 1.
 - "Can you describe the feature?" — the user already did.
-- Ten questions in one round — important ones get buried.
+- "Soft-delete or hard-delete? Recommended: soft-delete." — a recommendation anchors the user.
+- Three questions in one message or one tool call — the user answers the first and skims the rest.
 
 **The "enough" stop-gap.** When the user says "enough", "just go", or "I trust your judgment":
 1. Mark all remaining unverified assumptions as ASSUMED
@@ -139,7 +138,7 @@ Flag which interfaces are **load-bearing** — ALL of these hold (the same bar a
 - Hard to reverse once implemented
 - A genuine trade-off exists between competing designs
 
-Present your flags; the user decides which are truly load-bearing, not you. For each confirmed one, run the **Design-It-Twice** protocol in [references/design-it-twice.md](references/design-it-twice.md) — cheap parallel subagents, one design constraint each; you recommend, the user picks.
+Ask which are load-bearing as one `multiSelect` question through the question tool: one option per flagged interface, its description saying which of the three conditions hold (more than four flags: ask again for the rest). The user decides which are truly load-bearing, not you. For each confirmed one, run the **Design-It-Twice** protocol in [references/design-it-twice.md](references/design-it-twice.md) — cheap parallel subagents, one design constraint each; you compare, the user picks.
 
 Everything else is documented once and moves on — most interfaces are not load-bearing, and running variants for everything wastes time and attention.
 
@@ -159,12 +158,27 @@ Fix issues inline. No separate review cycle — just fix and move on.
 
 ### Phase 6: Sign-Off Gate
 
-Present the design doc. If the user requests changes, revise and present again — sign-off is the only exit.
+Present the design doc, then ask for sign-off as one question through the question tool. If the user requests changes, revise and present again — sign-off is the only exit.
 
 On sign-off:
 1. Update `status: signed-off` in the frontmatter
 2. Commit the design doc
 3. Tell the user: "Design signed off. Next step is `/plan`, which consumes this doc."
+
+## Asking the user
+
+Every question this skill asks — clarifying questions, picks between options, confirmations, sign-off — follows these rules.
+
+1. **Use the question tool.** Before the first question, check for a tool that asks the user (`AskUserQuestion` in Claude Code; if it is listed only as a deferred tool, load it with ToolSearch first) and ask through it. With no such tool, ask in plain text in the same shape: the question, then its options lettered (a), (b), … each with what it means.
+2. **One question at a time.** One question per message and per tool call, even though the tool takes four. Wait for the answer, then choose the next question in its light.
+3. **No recommended option.** Never label an option "Recommended" or "default", never put your favorite first, and never say which you would pick — not in the question, the options or the text around them. If the user asks what you would pick, answer.
+4. **Use the tool well.**
+   - `question`: one to three concrete sentences. What the user needs to decide goes here, not in a wall of text before the call.
+   - `header`: a chip of 12 characters at most naming the topic.
+   - `options`: 2–4 real, mutually exclusive answers with short labels. Each `description` says what choosing it means for the work — what it changes, what it costs, what it rules out — so the user can decide without a recommendation.
+   - `multiSelect: true` when several answers can hold at once (for example, which items apply).
+   - `preview` when the options are concrete things to compare: a signature, a schema, a snippet, a layout.
+   - No "Other" option: the tool adds one for the user's own words.
 
 ## Deep-Modules Vocabulary
 
@@ -196,4 +210,4 @@ When the user's stated behavior contradicts what the code actually does, surface
 
 > "You said partial cancellation is possible, but `OrderService.cancel()` deletes the entire order. Which is correct — should we change the code, or was the description inaccurate?"
 
-Never silently adopt either side. The language and the code are forced to agree; the user decides which is right.
+Ask each as one question through the question tool, the two sides as its options. Never silently adopt either side. The language and the code are forced to agree; the user decides which is right.

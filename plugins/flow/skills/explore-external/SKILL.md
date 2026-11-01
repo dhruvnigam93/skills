@@ -30,7 +30,7 @@ NO DESIGN ASSUMPTION ABOUT EXTERNAL BEHAVIOR WITHOUT A PROBE THAT DEMONSTRATES I
 | **Public repo** | Shallow-clone to a scratch dir, run codebase research on it via subagents. Faster and more reliable than docs. |
 | **No source (closed API, service, CLI)** | Write **learning tests**: scripted probes that map behavior empirically. |
 
-Ask the user if unclear: "Is the source for X public, or should I probe the live system?"
+Ask the user if unclear, as one question through the question tool (`AskUserQuestion`; load it with ToolSearch if it is deferred), with no recommended option: "Is the source for X public, or should I probe the live system?"
 
 ### 2a. Public source — clone and research
 

@@ -31,8 +31,9 @@ EVERY STEP MUST BE BUILDABLE AND VERIFIABLE FROM THE PLAN HEADER + THAT STEP ALO
 ### 1. Find the design, isolate, check scope
 
 - **Signed design doc** — the path passed in, or the doc in `thoughts/shared/designs/` matching the current branch's slug, with `status: signed-off`. Read it fully, plus its `references:`. Its Interface Spec is the source of every signature in the plan.
-- **No design, or only a draft** — recommend it in one line, then follow the user's call. Never block on it:
-  > "There's no signed design for this. I'd run `/flow:design` first — or I can plan straight from what you've described. Which?"
+- **No design, or only a draft** — ask, as one question through the question tool, then follow the user's call. Never block on it, and don't recommend either option:
+  - **Run `/flow:design` first** — the interfaces get their own sign-off before any plan exists.
+  - **Plan from the description** — no design doc; new signatures get approved with the plan.
 
   If they choose to plan, what they described (plus the draft, if any) is the design. Any signature the plan introduces gets approved with the plan at sign-off.
 - **Branch** — if you are on the default branch, propose `feat/<kebab-desc>` off main and create it on confirm. Never commit the plan to the default branch. (If `/flow:design` ran, you are already on its branch.)
@@ -45,7 +46,7 @@ Read the code the steps will touch, plus `kb/architecture.md` and `kb/domain.md`
 - the project's real commands — from the Makefile, `package.json`, `pyproject.toml`, or CI config. Never guess a command.
 - existing tests the new ones should mirror
 
-If something blocks a step and neither the design nor the code answers it, ask — one batched round of 3–5 questions, each with a recommended answer. Never write an open question into the plan. If the user says "enough", use your recommendations and list them under **Assumptions** in the plan header.
+If something blocks a step and neither the design nor the code answers it, ask — one question at a time, following **Asking the user** below. Never write an open question into the plan. If the user says "enough", pick safe defaults and list them under **Assumptions** in the plan header.
 
 If a step needs an interface the signed design lacks or contradicts, stop and raise it. That is a design change, and design belongs to the user.
 
@@ -129,12 +130,27 @@ Check with fresh eyes before presenting. Fix inline.
 
 ### 5. Sign-off
 
-Present the plan in chat: the success criteria, then a compact table (step · what it does · how it is verified), then the file path. This is the one checkpoint — the user approves the steps and their checks together. Revise until they sign off.
+Present the plan in chat: the success criteria, then a compact table (step · what it does · how it is verified), then the file path. This is the one checkpoint — the user approves the steps and their checks together. Ask for sign-off as one question through the question tool. Revise until they sign off.
 
 On sign-off:
 1. Set `status: signed-off` in the frontmatter
 2. Commit the plan file
 3. Tell the user: "Plan signed off. Next step is `/flow:implement`, which works through it one step at a time."
+
+## Asking the user
+
+Every question this skill asks — clarifying questions, picks between options, confirmations, sign-off — follows these rules.
+
+1. **Use the question tool.** Before the first question, check for a tool that asks the user (`AskUserQuestion` in Claude Code; if it is listed only as a deferred tool, load it with ToolSearch first) and ask through it. With no such tool, ask in plain text in the same shape: the question, then its options lettered (a), (b), … each with what it means.
+2. **One question at a time.** One question per message and per tool call, even though the tool takes four. Wait for the answer, then choose the next question in its light.
+3. **No recommended option.** Never label an option "Recommended" or "default", never put your favorite first, and never say which you would pick — not in the question, the options or the text around them. If the user asks what you would pick, answer.
+4. **Use the tool well.**
+   - `question`: one to three concrete sentences. What the user needs to decide goes here, not in a wall of text before the call.
+   - `header`: a chip of 12 characters at most naming the topic.
+   - `options`: 2–4 real, mutually exclusive answers with short labels. Each `description` says what choosing it means for the work — what it changes, what it costs, what it rules out — so the user can decide without a recommendation.
+   - `multiSelect: true` when several answers can hold at once (for example, which items apply).
+   - `preview` when the options are concrete things to compare: a signature, a schema, a snippet, a layout.
+   - No "Other" option: the tool adds one for the user's own words.
 
 ## Red Flags
 

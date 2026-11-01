@@ -32,7 +32,7 @@ One-line summary of what this design covers.
 
 | # | Assumption | Status | Basis |
 |---|-----------|--------|-------|
-| 1 | Example verified assumption | VERIFIED | User confirmed, round 1 |
+| 1 | Example verified assumption | VERIFIED | User confirmed, Q1 |
 | 2 | Example assumed default | ASSUMED | Safe default: X. User said "enough". |
 | 3 | Example unresolved item | UNVERIFIED | Awaiting user input |
 

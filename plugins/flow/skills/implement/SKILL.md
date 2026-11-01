@@ -110,8 +110,8 @@ Wait for the verdict. Parse the first line of the report: `VERDICT: APPROVE`, `V
 | Verdict | Action |
 |---------|--------|
 | **APPROVE** (or gate skipped review) | Commit and continue to next step. |
-| **BLOCK** | Fix your code (not the step spec). Re-dispatch the reviewer. Max **3 review cycles** — after 3 BLOCKs, pause: "Step N blocked 3 times. Reviewer keeps finding: [reasons]. Your call." |
-| **ESCALATE** | Pause. Show the user the reviewer's full report — the decision, options, and recommendation. Wait. |
+| **BLOCK** | Fix your code (not the step spec). Re-dispatch the reviewer. Max **3 review cycles** — after 3 BLOCKs, pause and ask (see **Asking the user**): "Step N blocked 3 times. Reviewer keeps finding: [reasons]. How should we proceed?" |
+| **ESCALATE** | Pause. Show the user the reviewer's evidence, then ask its decision as one question, its options as the options (see **Asking the user**). Wait. |
 
 **Commit on APPROVE or a skipped review (and every other commit in this skill: the `status: done` commit, the handoff note):** always invoke the `commit` skill via the Skill tool. Never run a bare `git commit`, because the harness adds a `Co-Authored-By: Claude` trailer to commits made without the skill, and the skill's attribution rules (no `Co-Authored-By`, no "Generated with", no AI metadata) are what strip it. The plan sign-off plus the reviewer's APPROVE (or the gate's skip) counts as the user's approval, so skip the skill's "Shall I proceed?" prompt and commit straight away. Stage only the files in `Files:` plus the plan file. Never `git add -A`. Message:
 
@@ -151,6 +151,13 @@ Commit this note. Tell the user:
 > "Context getting full — committed through Step N, noted the resume point. Run `/flow:implement <plan-path>` in a fresh session to continue."
 
 Never push through. A degraded agent makes mistakes that waste more time than a clean restart.
+
+## Asking the user
+
+Every pause that needs the user — an ESCALATE, 3× BLOCK, a MANUAL checkpoint — is a question through the question tool (`AskUserQuestion` in Claude Code; if it is listed only as a deferred tool, load it with ToolSearch first; with no such tool, ask in plain text with lettered options).
+- One question per message and per tool call.
+- The options are the ways forward (for an ESCALATE, the reviewer's options), each `description` saying what it means for the work. Put a signature or snippet the user should compare in `preview`. No "Other" option: the tool adds one.
+- No recommended option: don't label one, order by preference, or argue for one. If the user asks what you would pick, answer.
 
 ## Red Flags
 

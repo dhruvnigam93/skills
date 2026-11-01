@@ -17,7 +17,7 @@ Pick up work from a handoff document. Validate that the world matches what the h
 
 - **Path provided** — read it.
 - **No path** — look in `thoughts/shared/handoffs/` for the most recent file on the current branch. If multiple exist, use the one with the latest date in the filename.
-- **Nothing found** — ask: "I can't find a handoff doc. Do you have a path, or should I check the plan directly?"
+- **Nothing found** — ask, as one question through the question tool (`AskUserQuestion`; load it with ToolSearch if it is deferred): "I can't find a handoff doc. Do you have a path, or should I check the plan directly?"
 
 ### 2. Read and validate
 
@@ -33,8 +33,8 @@ Read the handoff fully. Then validate current state against what it describes:
 
 **If state diverged** (commits after the handoff, plan modified, branch rebased):
 - Tell the user what changed since the handoff
-- Propose how to proceed: usually, trust the plan's checkmarks + git log over the handoff's description
-- Get a one-word confirmation before continuing
+- Ask how to proceed, as one question through the question tool: the ways forward as options (for example, go by the plan's checkmarks and git log, or by the handoff's description), each saying what it means, none marked recommended
+- Continue once the user answers
 
 **If state matches:** proceed without asking.
 

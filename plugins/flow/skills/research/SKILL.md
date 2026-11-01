@@ -30,10 +30,10 @@ If the user mentioned specific files, tickets, or docs — read them FULLY yours
 
 ### 2. Sharpen the question
 
-State the research question in one line. If the request is vague, sharpen it:
+State the research question in one line. If the request is vague, sharpen it and confirm it as one question through the question tool (`AskUserQuestion`; load it with ToolSearch if it is deferred; with no such tool, ask in plain text):
 > "I'll research how order cancellation works — the flow, the edge cases, and what would need to change. That right?"
 
-One word from the user ("yes", "go") is enough to proceed.
+One click or word from the user is enough to proceed.
 
 ### 3. Fan out subagents
 
@@ -95,8 +95,9 @@ tried, what was rejected, and why. Cite the source doc.
 
 ## Open Questions
 
-Questions the codebase couldn't answer — these feed into `/flow:design`'s batched
-rounds. Each with a recommended answer if you have one.
+Questions the codebase couldn't answer — these feed into `/flow:design`, which asks
+them one at a time. For each, list the options you see and what each would mean,
+without picking one: design asks them with no recommended answer.
 
 ## Opinion
 
