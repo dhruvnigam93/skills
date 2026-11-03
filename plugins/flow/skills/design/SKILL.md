@@ -107,7 +107,17 @@ cancelSubscription(id: SubscriptionId, reason: CancelReason) -> CancellationRece
   Error: SubscriptionNotFound if id does not exist.
   Ordering: must be called after activate(); no-op if already cancelled.
   Dependency: takes BillingGateway as injected adapter.
+
+  Usage:
+    receipt = cancelSubscription("sub_8Kq2", CancelReason.TooExpensive)
+    # -> CancellationReceipt(id="rcpt_301", subscription="sub_8Kq2",
+    #      cancelled_at="2026-10-01T09:14Z", refund_cents=1450)
+
+    again = cancelSubscription("sub_8Kq2", CancelReason.TooExpensive)
+    # -> the same receipt (id="rcpt_301", refund_cents=1450); no second refund is issued
 ```
+
+**Every interface gets a usage example.** Below each signature, show 1–2 short snippets of a real caller using it, written with this codebase's actual names and data (a real job, a real file name, a real input spec), never `foo`/`bar`. Show what the caller writes and what comes back: the return value, the files written, the error raised. For a CLI or script, show the command line and its output. The signature says what exists; the example shows how it feels to use. This is still design altitude: the example shows a caller, never the implementation, file paths or steps.
 
 Wrong (too shallow):
 ```
@@ -153,6 +163,7 @@ Write the doc to the **Output** path using [templates/design-doc.md](templates/d
 3. **Scope** — does this cover exactly one feature? If it drifts into a second feature, cut it.
 4. **Ambiguity** — could any requirement be read two ways? Pick one and state it.
 5. **Altitude** — anything from the /plan column of the altitude split? Remove it.
+6. **Examples** — does every interface have a realistic usage example? Could a reader who skipped the signatures still call it correctly?
 
 Fix issues inline. No separate review cycle — just fix and move on.
 
@@ -178,6 +189,7 @@ Every question this skill asks — clarifying questions, picks between options, 
    - `options`: 2–4 real, mutually exclusive answers with short labels. Each `description` says what choosing it means for the work — what it changes, what it costs, what it rules out — so the user can decide without a recommendation.
    - `multiSelect: true` when several answers can hold at once (for example, which items apply).
    - `preview` when the options are concrete things to compare: a signature, a schema, a snippet, a layout.
+   - When options are interfaces, behaviours or scenarios, `preview` holds a usage snippet (how a caller writes it, what comes back), not only the signature. When options differ in behaviour (batching, naming, failure handling), first walk one real input through each option in the message, then ask.
    - No "Other" option: the tool adds one for the user's own words.
 
 ## Deep-Modules Vocabulary

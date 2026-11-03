@@ -55,10 +55,10 @@ Return exactly these five sections:
 
 ## Step 3: Present and Compare
 
-1. **Present each variant sequentially** so the user can absorb one at a time. Use the subagent's own structure — do not reformat or summarize away detail.
+1. **Present each variant with the same 1–2 real scenarios written against it**: the most common caller, plus one edge case (a failure, a resume, a second adapter). Use the same inputs for every variant, so the user compares how they feel in use, not just their shapes. Then give the signatures. Keep the subagent's own detail; do not summarize it away.
 
 2. **Compare in prose** on depth, locality, and seam placement (what varies across the seam, how many adapters are justified).
 
 3. **No recommendation.** Do not say which design you think is strongest. If elements from different designs combine well, describe the hybrid with specifics as one more variant, without advocating it.
 
-4. **The user picks** — one question through the question tool (see SKILL.md, **Asking the user**): one option per variant (and the hybrid, if any). Each option's `preview` holds that variant's interface so the user can compare them side by side; its `description` gives the main trade-off. Record the result in the design doc's Load-Bearing Interfaces slot, rejected variants as "considered because..." lines.
+4. **The user picks** — one question through the question tool (see SKILL.md, **Asking the user**): one option per variant (and the hybrid, if any). Each option's `preview` holds that variant's usage example first, then its signature, so the user can compare them side by side; its `description` gives the main trade-off. Record the result in the design doc's Load-Bearing Interfaces slot, rejected variants as "considered because..." lines.

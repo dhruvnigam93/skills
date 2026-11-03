@@ -59,6 +59,8 @@ One subsection per new or changed interface:
 signature(param: Type, param: Type) -> ReturnType
 ```
 
+**Usage:** 1–2 realistic caller snippets with concrete inputs and what they produce (return value, files written, or error raised).
+
 **Invariants:** What must always be true.
 **Error modes:** What can go wrong and how it surfaces to the caller.
 **Ordering constraints:** What must happen before/after this call.
@@ -73,7 +75,7 @@ List the interfaces confirmed as load-bearing and why each meets the bar.
 If Design-It-Twice was run:
 
 ##### Variant Comparison
-Present each variant, compare by depth/locality/seam placement.
+Present each variant (each variant shown on the same usage scenario), compare by depth/locality/seam placement.
 
 ##### Selected Variant
 Which variant was chosen and why.
