@@ -1,0 +1,13 @@
+{
+  "name": "talk",
+  "version": "0.1.0",
+  "description": "A framework for building a conference talk: narrative first, storyboard second, slides last, with rehearsal loops that turn what you actually say into the talk. Bring your own slide, visual and transcription tools.",
+  "author": {
+    "name": "Dhruv Nigam",
+    "url": "https://github.com/dhruvnigam93"
+  },
+  "homepage": "https://github.com/dhruvnigam93/skills",
+  "repository": "https://github.com/dhruvnigam93/skills",
+  "license": "MIT",
+  "keywords": ["talks", "presentations", "storyboard", "rehearsal", "public-speaking", "conference"]
+}

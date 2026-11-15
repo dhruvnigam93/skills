@@ -1,0 +1,35 @@
+# Talk settings. Every skill reads this file, and these values live nowhere else.
+
+title: ""
+event: ""
+date: ""                  # YYYY-MM-DD HH:MM, the local time the talk starts
+timezone: ""
+
+slot:
+  talk_minutes: 0         # time you have to speak
+  qa_minutes: 0           # time for questions; 0 if there are none
+  target_minutes: 0       # what you plan for: about 90% of talk_minutes
+
+audience: ""              # who they are, what they already know, what they believe now
+selection_criteria: ""    # the event's review rubric or call-for-papers rules, if any
+
+presenting:
+  app: ""                 # where the slides are shown on the day
+  machine: ""             # yours or the venue's; this decides how media must be embedded
+  aspect: "16:9"
+
+style: ""                 # look and feel in a sentence or two, or a path to a reference
+
+pace:
+  plan_wpm: 140           # words per minute, for estimating length
+  max_wpm: 170            # the fastest any five-minute stretch should get
+
+freeze:
+  content_hours_before: 24   # after this, only cuts and drills
+  visuals_hours_before: 12   # after this, the slides do not change
+
+tools:                    # bring your own; anything left blank is asked for when needed
+  slides: ""              # how slides get built: a skill, a script, a template, or "by hand"
+  visuals: ""             # how visuals are made or found: a generator, a library, a person, or "none"
+  transcription: ""       # how a recording becomes timestamped text
+  notify: ""              # how to reach you when long work finishes or stalls (optional)

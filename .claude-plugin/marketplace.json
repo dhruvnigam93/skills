@@ -1,6 +1,6 @@
 {
   "name": "dhruvnigam93",
-  "description": "Dhruv Nigam's Claude Code skills, starting with an alignment-first AI coding workflow.",
+  "description": "Dhruv Nigam's Claude Code skills: an alignment-first AI coding workflow, and a framework for building conference talks.",
   "owner": {
     "name": "Dhruv Nigam",
     "url": "https://github.com/dhruvnigam93"
@@ -12,6 +12,13 @@
       "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation.",
       "category": "development",
       "tags": ["workflow", "design", "planning", "architecture"]
+    },
+    {
+      "name": "talk",
+      "source": "./plugins/talk",
+      "description": "A framework for building conference talks: narrative first, storyboard second, slides last, with rehearsal loops that turn what you actually say into the talk. Bring your own tools.",
+      "category": "productivity",
+      "tags": ["talks", "presentations", "storyboard", "rehearsal", "public-speaking"]
     }
   ]
 }

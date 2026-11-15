@@ -40,6 +40,24 @@ The agent drafts, you sign off. Design happens at your altitude (module boundari
 
 The full roadmap (15 skills) is in [Part 3 of the spec](docs/ai-coding-workflow.md#part-3--skills-to-build).
 
+### `talk` — a framework for building conference talks
+
+Narrative first, storyboard second, slides last. Rehearsal starts before any slide exists, and a structure freeze keeps expensive work from being redone. Bring your own slide, visual and transcription tools. The framework is in [plugins/talk/README.md](plugins/talk/README.md).
+
+```
+/plugin install talk@dhruvnigam93
+```
+
+| Skill | What it does |
+|-------|--------------|
+| `/talk:start` | Sets up a talk (slot, audience, presenting setup, tools, schedule). Later, reports the stage, its gate and the next step. |
+| `/talk:narrative` | Brain dump and spoken talk-through → a one-page spine → prose, tested as a journey rather than a list. Also writes call-for-papers abstracts from the spine. |
+| `/talk:storyboard` | One entry per slide, with stable IDs, point-stating titles, beats and computed time, checked against the craft principles. Every structural change goes through it. |
+| `/talk:feedback` | Saves reviewer feedback as received, triages it by kind and weight, finds root causes and contradictions, and applies what's accepted. |
+| `/talk:rehearse` | Measures a run (time per slide, projected runtime, pace, fillers), reconciles what was said with the plan, and decides each gap: adopt, drill, cut or restore. |
+| `/talk:build` | Visuals and slides from the frozen storyboard with your own tools, verified against it, and synced back after hand edits. |
+| `/talk:final` | Freeze times, cue card, Q&A bank, day-of checklist, final runs and archive. |
+
 ## Develop locally
 
 Register your clone as a marketplace; edits take effect at the next session start or after `/reload-plugins`:
