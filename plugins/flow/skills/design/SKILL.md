@@ -5,7 +5,8 @@ description: >-
   shapes, and schema definitions — before any planning or coding begins. Use when
   the user says "design this", "let's think through the interface", "how should we
   structure this", "what should the API look like", "design before we plan",
-  "design the architecture", or "/design". 
+  "design the architecture", or "/design". For an ML experiment (an ablation, a
+  fine-tune, a benchmark), use /flow:experiment-design.
 user_invocable: true
 ---
 

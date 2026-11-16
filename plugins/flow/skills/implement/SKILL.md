@@ -4,7 +4,8 @@ description: >-
   Execute a signed implementation plan step by step — implement, verify, get
   independent review, auto-commit. Use when the user says "implement this",
   "start building", "execute the plan", "run the steps", "/implement", or
-  right after a plan is signed off.
+  right after a plan is signed off. For an ML experiment's run plan (launches on
+  paid compute, gates), use /flow:experiment-run.
 argument-hint: "[path to plan]"
 ---
 
@@ -26,6 +27,7 @@ NO LARGE-STEP COMMIT WITHOUT A PASSING INDEPENDENT REVIEW
 
 - **Plan file** — the path passed in, or the most recent `thoughts/shared/plans/*.md` on the current branch with `status: signed-off` or `status: implementing`.
 - **No signed plan** — say: "No signed plan found. Run `/flow:plan` first." Stop.
+- **An experiment run plan** (`*-run.md`, written by `/flow:experiment-plan`), when this skill was invoked directly — it launches paid compute. Say so and hand it to `/flow:experiment-run`, which follows this loop and adds the user's go at each gate.
 - **Resume** — if `status: implementing` and some steps are checked (`[x]`), pick up from the first unchecked step. Read the last `Review note:` and any `> **Handoff:**` block to understand where things stand. Trust checked steps and `git log` over your own recollection — after context compaction, the plan is the record.
 - Set `status: implementing` in the frontmatter if it isn't already. This change rides with the first step's commit — never commit it alone.
 - Read the **plan header** (everything above Phase 1) — this is your context for every step. Read the **design doc** in `references:` if it exists — its Interface Spec is the authority on signatures.

@@ -4,7 +4,8 @@ description: >-
   Write the implementation plan for one software feature — after design, before
   any code. Use when the user says "plan this", "write the plan", "break this into
   steps", "create an implementation plan", "turn the design into steps", "/plan",
-  or right after a design doc is signed off.
+  or right after a design doc is signed off. For the run plan of an ML experiment,
+  use /flow:experiment-plan.
 argument-hint: "[path to design doc, or a feature description]"
 ---
 

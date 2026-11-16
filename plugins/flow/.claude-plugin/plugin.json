@@ -1,7 +1,7 @@
 {
   "name": "flow",
-  "version": "0.6.1",
-  "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation.",
+  "version": "0.7.0",
+  "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation. With an experiment track for ML work: one question, your predictions on record, a frozen design, gated runs and a recorded decision.",
   "author": {
     "name": "Dhruv Nigam",
     "url": "https://github.com/dhruvnigam93"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/dhruvnigam93/skills",
   "repository": "https://github.com/dhruvnigam93/skills",
   "license": "MIT",
-  "keywords": ["workflow", "design", "planning", "architecture", "interfaces", "code-review"]
+  "keywords": ["workflow", "design", "planning", "architecture", "interfaces", "code-review", "experiments", "ml"]
 }

@@ -40,6 +40,17 @@ The agent drafts, you sign off. Design happens at your altitude (module boundari
 
 The full roadmap (15 skills) is in [Part 3 of the spec](docs/ai-coding-workflow.md#part-3--skills-to-build).
 
+**Experiment track** (v0.7), for ML experiments and model development, where there is no PRD: there is a question and a hypothesis. A study is a thread of rounds; each round is one question, one frozen design, its runs, an answer and a decision. Records live under `thoughts/studies/<date>-<study>/`.
+
+| Skill | What it does | Status |
+|-------|--------------|--------|
+| `/flow:experiment-design` | Design one round before any compute is spent: one question, your own hypothesis and predictions of result, time and cost on record before the agent shows a forecast, alignment questions one at a time, the smallest design that answers, and how each outcome will be read. Frozen at sign-off; later changes are dated amendments. Takes the place of `/flow:prd` and `/flow:design` for experiments. | ✅ v0.7 |
+| `/flow:experiment-plan` | `/flow:plan` plus what a run needs: launch and wait steps checked by what the run leaves, a forecast on every step that bills compute, a pilot only when something is unmeasured, and gates before anything billed. Writes `thoughts/shared/plans/YYYY-MM-DD-<round>-run.md`. | ✅ v0.7 |
+| `/flow:experiment-run` | `/flow:implement` plus what a run needs: preflight through the project's own launch rules, no billed launch without a go that named it, watching that only observes, actual time and cost beside each forecast, and a dated amendment for any change to the frozen design. | ✅ v0.7 |
+| `/flow:experiment-analyse` | Read the results against the frozen design: the planned measures first, from files by code; the checks that fit (seed spread, paired intervals, groups, concentration, a frozen threshold); predicted against actual; and the outcome of the design's Answer that holds. | ✅ v0.7 |
+| `/flow:experiment-review` | An independent review, pre-launch, of a result, or for directions: a neutral brief that gives the reviewer the evidence and never our conclusion, every finding checked before anyone acts, and a disposition table kept with the study. Required before launch only above the review threshold. | ✅ v0.7 |
+| `/flow:experiment-close` | Record your decision on a round (never inferred from the result), update the study index and the project record, and, only when asked, draft the report or messages and list what the round left behind. | ✅ v0.7 |
+
 ### `talk` — a framework for building conference talks
 
 Narrative first, storyboard second, slides last. Rehearsal starts before any slide exists, and a structure freeze keeps expensive work from being redone. Bring your own slide, visual and transcription tools. The framework is in [plugins/talk/README.md](plugins/talk/README.md).

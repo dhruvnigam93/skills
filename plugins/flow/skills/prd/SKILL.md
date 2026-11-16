@@ -4,7 +4,8 @@ description: >-
   Define what a feature should achieve — the product outcome, not the technical
   design. Use when the user says "write a PRD", "define the product requirements",
   "what should this feature do", "spec out the product", "/prd", or when the
-  product outcome needs defining before technical design begins.
+  product outcome needs defining before technical design begins. For an ML
+  experiment there is no PRD: use /flow:experiment-design.
 argument-hint: "[feature name or product goal]"
 ---
 
