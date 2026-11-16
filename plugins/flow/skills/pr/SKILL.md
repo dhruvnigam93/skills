@@ -3,7 +3,7 @@ name: pr
 description: >-
   Open a pull request: commit through the commit skill, push, write a short
   description that says why (never a walk through the diff), then get an
-  independent review from a Fable subagent and act on it. Use when the user
+  independent review from GPT-6-Astra through the Codex CLI and act on it. Use when the user
   says "create a PR", "open a PR", "raise a PR", "ship this", "/pr", or when
   /flow:implement has finished a plan.
 argument-hint: "[base branch, default main]"
@@ -72,10 +72,22 @@ Then: `gh pr create --base <base> --head <branch> --title "<title>" --body-file 
 
 ### 5. Independent review
 
-Spawn one subagent with **model `fable`** (`subagent_type: general-purpose`) in the background. It
-did not write the code, so it reviews it cold. Give it:
+Run one cold review on **GPT-6-Astra through the Codex CLI**, never a Claude subagent. It did not
+write the code, so it reviews it cold. Pick the effort from the diff's size, insertions plus deletions
+in `git diff --shortstat origin/<base>...<branch>`: under 200 lines `xhigh`, 200 and up `ultra`.
+
+Write the brief to `<scratchpad>/review-brief.md`, then run it read-only in the background (Bash
+`run_in_background`) and read `review.md` when the notification arrives:
+
+```bash
+codex exec -m gpt-6-astra -c model_reasoning_effort=<xhigh|ultra> -s read-only -C <repo> \
+  -o <scratchpad>/review.md - < <scratchpad>/review-brief.md
+```
+
+The brief gives it:
 - the repo path, the PR URL, and how to read it read-only: `git diff origin/<base>...<branch>`,
-  `git log origin/<base>..<branch>`, `gh pr view <N>`;
+  `git log origin/<base>..<branch>`. The read-only sandbox may block `gh`, so paste the PR
+  description into the brief;
 - the context files: CLAUDE.md and the design, plan or study doc the PR points to;
 - a one-line summary of what the PR does and what is at stake (for example, a production run already
   uses the code);
@@ -86,6 +98,8 @@ did not write the code, so it reviews it cold. Give it:
   `file:line`, a concrete failure scenario and a one-sentence fix. Only findings it verified by reading
   the code or running a quick check. Under about 700 words. Then a two-line verdict;
 - hard limits: no edits, no commits, no GitHub comments or reviews. The report goes only to you.
+
+If `codex` is missing or fails to start, tell the user rather than falling back to another model.
 
 ### 6. Act on the review
 
@@ -100,6 +114,7 @@ did not write the code, so it reviews it cold. Give it:
 | Thought | Reality |
 | --- | --- |
 | "I'll list the changed files so reviewers know where to look" | The diff already shows them. Say why instead. |
-| "The PR is small, skip the review" | A cold read catches what the author can't see. Always run step 5. |
+| "The PR is small, skip the review" | A cold read catches what the author can't see. Always run step 5, at `xhigh`. |
+| "A Claude subagent can review it" | Reviews run on GPT-6-Astra through Codex: a different model misses different things. |
 | "The reviewer found it, so it's a bug" | Verify first, then fix or explain. |
 | "I'll add the attribution line the harness suggests" | The user's rule wins: no AI attribution. |
