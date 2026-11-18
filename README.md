@@ -51,6 +51,12 @@ The full roadmap (15 skills) is in [Part 3 of the spec](docs/ai-coding-workflow.
 | `/flow:experiment-review` | An independent review, pre-launch, of a result, or for directions: a neutral brief that gives the reviewer the evidence and never our conclusion, every finding checked before anyone acts, and a disposition table kept with the study. Required before launch only above the review threshold. | ✅ v0.7 |
 | `/flow:experiment-close` | Record your decision on a round (never inferred from the result), update the study index and the project record, and, only when asked, draft the report or messages and list what the round left behind. | ✅ v0.7 |
 
+**Writing** (v0.8), for docs and other prose an agent wrote. The rules are adapted from Marin's [AI-writing don'ts](https://github.com/marin-community/marin/blob/main/docs/dev-guide/writing-style/ai-writing-donts.md).
+
+| Skill | What it does | Status |
+|-------|--------------|--------|
+| `/flow:writing-review` | Review technical prose for AI-writing habits: sentences with no fact, stock contrast, adjectives with no evidence, claims that disagree with the code, rotating terms and LLM cadence. A bundled scanner flags the word-level patterns, a read and a claim check against the repo find the rest, and durable docs go to a cold reader who sees only the text. Findings come with plain rewrites that never invent a number, and are applied on your yes. | ✅ v0.8 |
+
 ### `talk` — a framework for building conference talks
 
 Narrative first, storyboard second, slides last. Rehearsal starts before any slide exists, and a structure freeze keeps expensive work from being redone. Bring your own slide, visual and transcription tools. The framework is in [plugins/talk/README.md](plugins/talk/README.md).
