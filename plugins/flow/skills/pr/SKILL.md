@@ -2,7 +2,8 @@
 name: pr
 description: >-
   Open a pull request: commit through the commit skill, push, write a short
-  description that says why (never a walk through the diff), then get an
+  description that says why and how it was verified (never a walk through
+  the diff), then get an
   independent review from GPT-6-Astra through the Codex CLI and act on it. Use when the user
   says "create a PR", "open a PR", "raise a PR", "ship this", "/pr", or when
   /flow:implement has finished a plan.
@@ -21,7 +22,8 @@ THE DESCRIPTION SAYS WHY. THE DIFF SAYS WHAT.
 ```
 
 Never walk through the diff file by file, restate the code, or list every change. Spend the words on
-why the change exists, what was considered, and what was left out.
+why the change exists, how you know it works and doesn't regress, what was considered, and what was
+left out.
 
 ## Process
 
@@ -31,6 +33,11 @@ why the change exists, what was considered, and what was left out.
 - Tests and lint pass (the project's own commands, e.g. `uv run pytest`, `uv run ruff check .`).
   Failing checks: stop and tell the user. Don't open a PR on red.
 - Nothing unrelated in the working tree. Leave unrelated files alone and mention them.
+- Have the evidence for the description's **Verified** section: what you ran to show the change does
+  what it's for, and what shows that what worked before still works (the plan's step checks, a run,
+  the project's regression gate against its baseline). If it was never exercised beyond the unit
+  tests, it goes in the description as unverified. Never launch paid compute for this without the
+  user's go.
 
 ### 2. Commit
 
@@ -46,7 +53,7 @@ one (for example `direnv exec . gh …`).
 
 ### 4. Write the description
 
-Write it to a file in the scratchpad, using this shape. Aim for under 250 words.
+Write it to a file in the scratchpad, using this shape. Aim for under 300 words.
 
 ```markdown
 **Why.** The problem or decision behind the change, with its evidence: numbers, run ids, links to the
@@ -54,6 +61,12 @@ study or design doc. Two to four sentences.
 
 **What.** The shape of the change in one or two sentences, at a level the diff doesn't show at a
 glance. Point to the doc that explains it, if there is one.
+
+**Verified**
+- Works as intended: what you ran or inspected that shows the new behaviour, and what it showed (a
+  run id and its numbers, a before and after, the test that pins the case the change exists for).
+- No regression: the gate you ran against what came before, and how it compared (the regression
+  sample against its baseline, old data or callers through the new code).
 
 **Considered, not done**
 - An alternative, and why not.
@@ -65,6 +78,9 @@ glance. Point to the doc that explains it, if there is one.
 Rules:
 - Why first. Every section should answer a question a reviewer can't answer from the code.
 - No file-by-file lists, no restated function names or signatures, no test counts as filler.
+- Verified names evidence, not effort: each bullet says what was checked and what it showed. "All
+  tests pass" alone is not verification; CI already shows it. Anything not verified goes under Risk,
+  said plainly.
 - Plain words, short sentences. Cut anything a reviewer would skip.
 - Title: imperative and specific, like the main commit's subject.
 
@@ -92,7 +108,8 @@ The brief gives it:
 - a one-line summary of what the PR does and what is at stake (for example, a production run already
   uses the code);
 - priorities, in order: bugs that crash or silently corrupt; compatibility with old data and callers;
-  checks and tests that would miss a real problem; performance at production scale; docs that
+  checks and tests that would miss a real problem; whether the description's Verified evidence
+  actually covers the change and its regression risk; performance at production scale; docs that
   contradict the code; the description against step 4's rules (say what to cut or add);
 - the report format: findings, most severe first, each with severity (blocker / should-fix / nit),
   `file:line`, a concrete failure scenario and a one-sentence fix. Only findings it verified by reading
@@ -114,6 +131,7 @@ If `codex` is missing or fails to start, tell the user rather than falling back 
 | Thought | Reality |
 | --- | --- |
 | "I'll list the changed files so reviewers know where to look" | The diff already shows them. Say why instead. |
+| "Tests pass, that's the verification" | CI already shows that. Say what shows this change does what it's for, and that what worked before still works. |
 | "The PR is small, skip the review" | A cold read catches what the author can't see. Always run step 5, at `xhigh`. |
 | "A Claude subagent can review it" | Reviews run on GPT-6-Astra through Codex: a different model misses different things. |
 | "The reviewer found it, so it's a bug" | Verify first, then fix or explain. |
