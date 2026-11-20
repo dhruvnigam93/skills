@@ -1,0 +1,542 @@
+<meta charset="utf-8">
+<title>Review Spam Classifier</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!--
+  Experiment-report skeleton. Every word and number below is INVENTED placeholder content for a fictional study
+  (a review-spam classifier). Copy this file next to the study's results, keep the <style> block and the component
+  markup, and replace all content. Never reuse a placeholder number.
+
+  Components, in page order:
+    header      .eyebrow, h1 (the finding), .meta (date / eval set / exclusions / status), .abstract
+    Table 1     figure.tbl > .tw > table   rows: tr.grp (measure group), tr.new (new model), tr.base (chance),
+                                           tr.pend (pending); cells: value + span.ci (interval, Δ); .v.pass/.fail pills
+    sections    h2 > span.n, h3 > span.n; dl.defs for definitions; .tw.spec for wordy tables
+    examples    .exs > .ex with .ex-h (tag + title), .row (label + text), .row.hit (the line discussed), .ex-n (note)
+    figures     figure.fig.wide > .tw > svg (diagram classes below), figcaption with span.tn
+    chart       figure.fig.wide > svg drawn to one scale (.axis, .tick, .pt-a/.pt/.pt-o)
+    footer      sources of every table and figure, and whether the page quotes data
+-->
+<style>
+/* Layout: one preprint column. Prose holds to about 66ch inside a 61rem measure; tables and figures take the full
+   measure and scroll sideways in their own containers when the screen is narrow. */
+:root {
+  --paper: #fbfcfd;
+  --ink: #18212c;
+  --ink-2: #4a5566;
+  --ink-3: #7e8897;
+  --rule: #ccd3dc;
+  --wash: #eef2f6;
+  --accent: #1f4f8f;
+  --accent-wash: #dfe8f5;
+  --pass: #1f7148;
+  --warn: #8f5d00;
+  --fail: #ad3229;
+  --serif: "Source Serif 4", "Source Serif Pro", Charter, "Iowan Old Style", Georgia, serif;
+  --sans: "IBM Plex Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11161d; --ink: #e4e8ee; --ink-2: #aab3c0; --ink-3: #808b9b; --rule: #2d3643; --wash: #19212b;
+    --accent: #8db3ea; --accent-wash: #1c2a3d; --pass: #5cbf88; --warn: #e0a948; --fail: #f07d72;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11161d; --ink: #e4e8ee; --ink-2: #aab3c0; --ink-3: #808b9b; --rule: #2d3643; --wash: #19212b;
+  --accent: #8db3ea; --accent-wash: #1c2a3d; --pass: #5cbf88; --warn: #e0a948; --fail: #f07d72;
+  color-scheme: dark;
+}
+body { background: var(--paper); color: var(--ink); }
+.paper {
+  box-sizing: border-box; max-width: 61rem; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 52px 88px;
+  font-family: var(--serif); font-size: 1.0625rem; line-height: 1.62; font-optical-sizing: auto;
+}
+.paper p, .paper ul, .paper ol, .paper dl, .paper h1, .paper h2, .paper h3, .abstract { max-width: 66ch; }
+.paper p { margin: 0 0 0.85em; }
+h1, h2, h3 { text-wrap: balance; color: var(--ink); }
+h1 { font-size: clamp(1.65rem, 4.4vw, 2.3rem); line-height: 1.16; font-weight: 600; letter-spacing: -0.012em; margin: 0.35em 0 0.5em; }
+h2 { font-size: 1.28rem; line-height: 1.3; font-weight: 700; margin: 2.5em 0 0.7em; }
+h3 { font-size: 1.04rem; line-height: 1.35; font-weight: 600; margin: 1.9em 0 0.5em; }
+h2 .n, h3 .n { font-family: var(--sans); font-weight: 500; color: var(--accent); margin-right: 0.55em; font-variant-numeric: tabular-nums; }
+h2 .n { font-size: 0.86em; }
+h3 .n { font-size: 0.9em; }
+.eyebrow { font-family: var(--sans); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--accent); margin: 0; }
+.meta { font-family: var(--sans); font-size: 0.84rem; line-height: 1.5; color: var(--ink-2); margin: 0 0 1.6rem; padding-bottom: 1.1rem; border-bottom: 1px solid var(--rule); }
+.meta span { white-space: nowrap; }
+.meta .sep { color: var(--ink-3); margin: 0 0.45em; }
+.abstract { margin: 0 0 0.5rem; font-size: 0.98rem; }
+.abstract .label { font-family: var(--sans); font-size: 0.74rem; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 0.35em; }
+code, .mono { font-family: var(--mono); font-size: 0.84em; }
+b, strong { font-weight: 650; }
+a { color: var(--accent); }
+ul, ol { padding-left: 1.3em; }
+li { margin: 0.25em 0; }
+li::marker { color: var(--ink-3); }
+
+dl.defs { margin: 0.4em 0 1.1em; }
+dl.defs > div { margin: 0.32em 0; }
+dl.defs dt { display: inline; font-weight: 650; }
+dl.defs dt::after { content: ". "; }
+dl.defs dd { display: inline; margin: 0; }
+
+figure { margin: 1.5rem 0 1.9rem; }
+figcaption { font-size: 0.875rem; line-height: 1.5; color: var(--ink-2); max-width: 75ch; }
+figcaption .tn { font-family: var(--sans); font-weight: 600; color: var(--ink); margin-right: 0.35em; }
+figure.tbl figcaption { margin-bottom: 0.55rem; }
+figure.fig figcaption { margin-top: 0.7rem; }
+.tw { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; line-height: 1.35; font-variant-numeric: tabular-nums lining-nums;
+  border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
+thead th { font-family: var(--sans); font-size: 0.74rem; font-weight: 600; color: var(--ink-2); text-align: right;
+  padding: 8px 9px 6px; border-bottom: 0.75px solid var(--ink); vertical-align: bottom; white-space: nowrap; }
+thead th:first-child, thead th.l { text-align: left; }
+tbody td { text-align: right; padding: 6px 9px; vertical-align: top; white-space: nowrap; }
+tbody th { text-align: left; font-weight: 600; padding: 6px 9px; vertical-align: top; white-space: nowrap; }
+tbody tr + tr > * { border-top: 0.5px solid var(--wash); }
+td.l { text-align: left; white-space: normal; } td.c { text-align: center; } td.nw { white-space: nowrap; }
+.ci { display: block; font-family: var(--sans); font-size: 0.7rem; line-height: 1.35; color: var(--ink-3); }
+tr.base > * { color: var(--ink-2); font-weight: 400; font-style: italic; }
+tr.grp th { font-family: var(--sans); font-size: 0.7rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--accent); padding-top: 12px; text-align: left; font-style: normal; }
+tr.new > th, tr.new > td { background: var(--accent-wash); }
+tr.pend > * { color: var(--ink-3); font-style: italic; font-weight: 400; }
+.below { color: var(--fail); font-weight: 600; }
+.v { display: inline-flex; align-items: center; gap: 6px; font-family: var(--sans); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+.v::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.v.pass { color: var(--pass); } .v.warn { color: var(--warn); } .v.fail { color: var(--fail); } .v.pend { color: var(--ink-3); }
+.spec td.l, .spec th { white-space: normal; }
+.spec td.l { min-width: 13rem; }
+
+/* diagrams: every colour comes from a token, so figures follow the theme */
+.fig svg { display: block; width: 100%; height: auto; }
+.wide svg { min-width: 680px; }
+svg text { font-family: var(--sans); }
+.tit { font-size: 13px; font-weight: 600; fill: var(--ink); }
+.sub { font-size: 11px; fill: var(--ink-2); }
+.lab { font-size: 11.5px; fill: var(--ink-2); }
+.lab-b { font-size: 11.5px; font-weight: 600; fill: var(--ink); }
+.lab-a { font-size: 11.5px; font-weight: 600; fill: var(--accent); }
+.ax { font-size: 10.5px; fill: var(--ink-3); }
+.monot { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-2); }
+.box { fill: var(--wash); stroke: var(--rule); stroke-width: 1; }
+.box-a { fill: var(--accent-wash); stroke: var(--accent); stroke-width: 1.2; }
+.box-p { fill: var(--paper); stroke: var(--ink-3); stroke-width: 1; }
+.tok { fill: var(--paper); stroke: var(--ink-3); stroke-width: 0.8; }
+.tok-nl { fill: var(--accent); }
+.line-l { fill: var(--accent); }
+.line-c { fill: var(--ink-3); }
+.line-u { fill: var(--rule); }
+.brk { fill: none; stroke: var(--ink-2); stroke-width: 1.2; }
+.brk-a { fill: none; stroke: var(--accent); stroke-width: 1.4; }
+.arr { stroke: var(--ink-2); stroke-width: 1.2; fill: none; }
+.arr-a { stroke: var(--accent); stroke-width: 1.2; fill: none; }
+.ah { fill: var(--ink-2); }
+.ah-a { fill: var(--accent); }
+.cell-on { fill: var(--accent); }
+.cell-off { fill: var(--wash); stroke: var(--rule); stroke-width: 0.5; }
+.sep-l { stroke: var(--rule); stroke-width: 1; stroke-dasharray: 3 3; }
+/* charts */
+.axis { stroke: var(--ink-3); stroke-width: 1; fill: none; }
+.tick { stroke: var(--ink-3); stroke-width: 1; }
+.ref-l { stroke: var(--warn); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.pt-a { fill: var(--accent); }
+.pt { fill: var(--ink-2); }
+.pt-o { fill: var(--paper); stroke: var(--ink-3); stroke-width: 1.4; }
+
+/* data excerpts: problem context only, never model scores */
+.exs { display: grid; gap: 14px; margin: 1rem 0 1.6rem; }
+.ex { border-left: 2px solid var(--rule); padding: 2px 0 2px 12px; min-width: 0; }
+.ex-h { font-family: var(--sans); font-size: 0.82rem; font-weight: 600; color: var(--ink); margin: 0 0 6px !important; }
+.ex-n { font-size: 0.86rem; color: var(--ink-2); margin: 6px 0 0 !important; max-width: 75ch; }
+.ex .row { display: grid; grid-template-columns: 4.6rem minmax(0, 1fr); gap: 0 10px; align-items: baseline;
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.45; padding: 2px 6px; color: var(--ink-2); }
+.ex .row.hit { background: var(--accent-wash); color: var(--ink); }
+.ex .tx { overflow-wrap: anywhere; }
+.ex .cl { font-family: var(--sans); font-size: 0.7rem; color: var(--ink-3); }
+.ex .cl.ch { color: var(--accent); font-weight: 600; }
+.tag { font-family: var(--sans); font-size: 0.68rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  padding: 1px 6px; border-radius: 3px; margin-right: 6px; border: 1px solid currentColor; }
+.tag.easy { color: var(--pass); } .tag.ctx { color: var(--accent); } .tag.hard { color: var(--warn); } .tag.lab { color: var(--ink-3); }
+@media (max-width: 520px) { .ex .row { grid-template-columns: 3.8rem minmax(0, 1fr); font-size: 0.74rem; } }
+footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-family: var(--sans); font-size: 0.8rem; line-height: 1.55; color: var(--ink-2); max-width: 75ch; }
+footer code { font-size: 0.92em; }
+@media (max-width: 480px) {
+  .paper { font-size: 1rem; padding-block: 36px 64px; }
+  h2 { margin-top: 2.1em; }
+}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap">
+
+<main class="paper">
+<header>
+  <p class="eyebrow">Experiment report · review-spam classifier</p>
+  <!-- h1: the finding as one sentence, with the comparison in it. Not the topic. -->
+  <h1>A 300M encoder reading the whole thread beats the 1B single-review decoder at a third of the cost</h1>
+  <!-- meta: date / eval set and size / what is left out / status (test, pending runs) / seeds -->
+  <p class="meta"><span>2026-01-15</span><span class="sep">/</span> <span>dev set, 4,200 threads</span><span class="sep">/</span> <span>threads over 8,192 tokens left out</span><span class="sep">/</span> <span>test held out, not yet scored</span><span class="sep">/</span> <span>1B encoder pending</span><span class="sep">/</span> <span>two seeds each</span></p>
+  <!-- abstract: one paragraph. Task and bar; the reference; what is new; the headline numbers per group; whether
+       each contender clears the bar; what explains the gain (the ablation); cost; what is not covered yet. -->
+  <section class="abstract" aria-label="Abstract">
+    <p class="label">Abstract</p>
+    <p>We flag each review in a product-review thread as spam or not, at 95% precision, in English, Spanish and Japanese. The reference is a 1B causal decoder that reads one review at a time. Here a 300M bidirectional encoder reads the whole thread and scores each review with one linear layer on the state of the separator token that closes it. Both train on the same 48,310 labelled reviews. On the same dev reviews the encoder's recall at 95% precision is 0.612 / 0.574 / 0.488 against 0.556 / 0.545 / 0.402 in en / es / ja, and it clears the bar in all three languages, where the decoder misses it in Japanese. Its PR AUC is 0.873 / 0.861 / 0.822 against 0.856 / 0.851 / 0.787. Fed whole threads the same way, the 1B decoder gains little (PR AUC 0.861 / 0.855 / 0.795), so the gain comes from reading the thread in both directions, not from the thread alone. The encoder scores the 2T-token corpus in about 2.1k GPU-hours, within the 5k budget; the decoder needs 6.9k. Test is unscored, threads over 8,192 tokens are left out, and the 1B encoder is still training.</p>
+  </section>
+</header>
+
+<!-- Table 1: the main contenders only, on the same data. Each measure is a row group. Each cell: the value (bold for
+     the new model), its 90% interval, and the paired Δ from the reference as a range. A chance row where it helps.
+     A Bar column with pass or fail. A cost row. The caption says what is compared, on what, and defines the bar. -->
+<figure class="tbl">
+  <figcaption><span class="tn">Table 1.</span>The main comparison: the 300M encoder reading whole threads against the 1B decoder reading single reviews, on the same 61,540 dev reviews. Two seeds averaged per review, 90% thread-bootstrap intervals, and the paired difference Δ from the decoder. <b>Clears</b>: recall@95 and its interval's lower bound ≥ 0.40 in every language. Bold: the best value in each column of each measure.</figcaption>
+  <div class="tw" tabindex="0">
+  <table>
+    <thead><tr><th>Model</th><th>en</th><th>es</th><th>ja</th><th style="text-align:center">Bar</th></tr></thead>
+    <tbody>
+<tr class="grp"><th colspan="5" scope="rowgroup">Recall at 95% precision</th></tr>
+<tr class="new"><th scope="row">Encoder 300M, thread</th><td><b>0.612</b><span class="ci">[0.561, 0.660]</span><span class="ci">Δ +0.021 to +0.094</span></td><td><b>0.574</b><span class="ci">[0.510, 0.633]</span><span class="ci">Δ −0.012 to +0.071</span></td><td><b>0.488</b><span class="ci">[0.421, 0.552]</span><span class="ci">Δ +0.030 to +0.141</span></td><td class="c"><span class="v pass">Clears</span></td></tr>
+<tr><th scope="row">Decoder 1B, review</th><td>0.556<span class="ci">[0.497, 0.611]</span><span class="ci">reference</span></td><td>0.545<span class="ci">[0.480, 0.604]</span><span class="ci">reference</span></td><td>0.402<span class="ci">[0.338, 0.470]</span><span class="ci">reference</span></td><td class="c"><span class="v fail">Misses</span></td></tr>
+<tr class="grp"><th colspan="5" scope="rowgroup">PR AUC</th></tr>
+<tr class="base"><th scope="row">Random scorer (spam share)</th><td>0.084</td><td>0.091</td><td>0.077</td><td></td></tr>
+<tr class="new"><th scope="row">Encoder 300M, thread</th><td><b>0.873</b><span class="ci">[0.851, 0.894]</span><span class="ci">Δ +0.004 to +0.031</span></td><td><b>0.861</b><span class="ci">[0.836, 0.884]</span><span class="ci">Δ −0.006 to +0.025</span></td><td><b>0.822</b><span class="ci">[0.790, 0.851]</span><span class="ci">Δ +0.012 to +0.058</span></td><td></td></tr>
+<tr><th scope="row">Decoder 1B, review</th><td>0.856<span class="ci">[0.832, 0.878]</span></td><td>0.851<span class="ci">[0.824, 0.876]</span></td><td>0.787<span class="ci">[0.751, 0.820]</span></td><td></td></tr>
+<tr class="grp"><th colspan="5" scope="rowgroup">Inference cost (one H100, bf16)</th></tr>
+<tr class="new"><th scope="row">Encoder 300M, thread</th><td colspan="3" class="l">260k tokens/s · about 2.1k GPU-hours for the 2T-token corpus, 0.43 of the 5k budget</td><td></td></tr>
+<tr><th scope="row">Decoder 1B, review</th><td colspan="3" class="l">80k tokens/s · about 6.9k GPU-hours, 1.4 times the budget</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+
+<section>
+<h2><span class="n">1</span>Study design and problem formulation</h2>
+<h3><span class="n">1.1</span>The question</h3>
+<p>Which model, and which way of feeding it a thread, finds the most spam at 95% precision in each language, at a cost the corpus can bear?</p>
+<h3><span class="n">1.2</span>Problem type and output</h3>
+<p>Per-review binary classification. Each review gets p(spam). The classifier removes only reviews it is sure of, so the operating point is 95% precision.</p>
+<dl class="defs">
+  <div><dt>The bar</dt><dd>Recall at 95% precision of at least 0.40 in each of en, es and ja. A model clears it when the point estimate and the lower end of its 90% interval are both at least 0.40 in every language.</dd></div>
+  <div><dt>The budget</dt><dd>5k GPU-hours for the corpus: about 900M threads and 2T tokens.</dd></div>
+</dl>
+
+<!-- What the target is, by kind: share and real examples from labelled train or dev data (never test). In a real
+     report these are real lines, chosen to hold no personal data; the page then stays private. -->
+<h3><span class="n">1.3</span>What spam looks like</h3>
+<p>The labeller also gives each spam review a kind. Promotion carries the largest share; templated praise and bot text carry most of the rest (Table 2).</p>
+<figure class="tbl">
+  <figcaption><span class="tn">Table 2.</span>Kinds of spam among the 61,540 dev reviews (5,412 spam), with examples. Share is of spam characters.</figcaption>
+  <div class="tw spec" tabindex="0">
+  <table>
+    <thead><tr><th>Kind</th><th>Share</th><th>Reviews</th><th class="l">What it is</th><th class="l">Examples</th></tr></thead>
+    <tbody>
+<tr><th scope="row">promo</th><td>41.2%</td><td>2,105</td><td class="l">coupon codes, referral links, store plugs</td><td class="l"><code>Use code GRAB15 at checkout for 15% off</code></td></tr>
+<tr><th scope="row">templated</th><td>27.5%</td><td>1,688</td><td class="l">the same praise posted across many listings</td><td class="l"><code>Amazing product!!! Fast shipping!!! 5 stars!!!</code></td></tr>
+<tr><th scope="row">bot</th><td>14.8%</td><td>903</td><td class="l">generated or scrambled text</td><td class="l"><code>great great product product quality is quality</code></td></tr>
+<tr><th scope="row">redirect</th><td>10.9%</td><td>497</td><td class="l">pointers to a profile or another site</td><td class="l"><code>Check my profile for the real deal</code></td></tr>
+<tr><th scope="row">off-topic ads</th><td>5.6%</td><td>219</td><td class="l">ads for unrelated services</td><td class="l"><code>We repair phones in Dallas, call today</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+
+<!-- Easy and hard cases. Each excerpt shows the LABELLER's label on every row and marks the row discussed.
+     No model scores, no win or lose tags: examples explain the problem, they never compare models. -->
+<h3><span class="n">1.4</span>Easy reviews, and reviews that need the thread</h3>
+<p>Some spam says what it is. Some reads like a normal review and is spam only because of what the rest of the thread shows. Each excerpt shows the labeller's label on every review; the marked review is the one discussed.</p>
+<div class="exs" data-nocheck>
+<div class="ex">
+  <p class="ex-h"><span class="tag easy">Says what it is</span> A coupon code between two reviews</p>
+  <div class="row"><span class="cl">review</span><span class="tx">Battery lasts two days with normal use.</span></div>
+  <div class="row hit"><span class="cl ch">promo</span><span class="tx">Use code GRAB15 at checkout for 15% off</span></div>
+  <div class="row"><span class="cl">review</span><span class="tx">The case scratches easily.</span></div>
+</div>
+<div class="ex">
+  <p class="ex-h"><span class="tag ctx">Needs the thread</span> A complaint that turns into a pointer</p>
+  <div class="row"><span class="cl">review</span><span class="tx">Mine stopped charging after a week.</span></div>
+  <div class="row hit"><span class="cl ch">redirect</span><span class="tx">Same here, mine broke too. Switched to the one in my profile, much better.</span></div>
+  <div class="row"><span class="cl">review</span><span class="tx">Support replaced it for free.</span></div>
+  <p class="ex-n">Read alone, it is a normal complaint. The thread shows the same account answering every complaint with the same pointer.</p>
+</div>
+<div class="ex">
+  <p class="ex-h"><span class="tag lab">Could go either way</span> Reviews the labeller calls genuine</p>
+  <div class="row hit"><span class="cl">review</span><span class="tx">Bought two, gave one to my brother.</span></div>
+  <div class="row hit"><span class="cl">review</span><span class="tx">5 stars</span></div>
+  <p class="ex-n">Short and empty, but not promotion. On reviews like these the precision we measure depends on where the labeller draws the line.</p>
+</div>
+</div>
+
+<h3><span class="n">1.5</span>The arms</h3>
+<p>Two backbones at two sizes, each fed single reviews and whole threads with the same head (Table 3). The encoder and the decoder differ in the direction of attention.</p>
+<figure class="tbl">
+  <figcaption><span class="tn">Table 3.</span>The arms. Every arm is trained twice, with seeds 1 and 2, and scores each review with one linear layer.</figcaption>
+  <div class="tw spec" tabindex="0">
+  <table>
+    <thead><tr><th>Arm</th><th class="l">Backbone</th><th class="l">Attention</th><th class="l">Input</th><th class="l">Fine-tuning</th></tr></thead>
+    <tbody>
+<tr class="new"><th scope="row">Encoder 300M, thread (new)</th><td class="l"><code>example/encoder-300m</code></td><td class="l">bidirectional</td><td class="l">whole thread</td><td class="l">full, lr 3e−5</td></tr>
+<tr><th scope="row">Decoder 1B, review (reference)</th><td class="l"><code>example/decoder-1b</code></td><td class="l">causal</td><td class="l">one review</td><td class="l">LoRA r16, lr 2e−4</td></tr>
+<tr><th scope="row">Encoder 300M, review</th><td class="l"><code>example/encoder-300m</code></td><td class="l">bidirectional</td><td class="l">one review</td><td class="l">full, lr 3e−5</td></tr>
+<tr><th scope="row">Decoder 1B, thread</th><td class="l"><code>example/decoder-1b</code></td><td class="l">causal</td><td class="l">whole thread</td><td class="l">LoRA r16, lr 2e−4</td></tr>
+<tr><th scope="row">Decoder 300M, review</th><td class="l"><code>example/decoder-300m</code></td><td class="l">causal</td><td class="l">one review</td><td class="l">full, lr 3e−5</td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+</section>
+
+<section>
+<h2><span class="n">2</span>Data collection and transformation</h2>
+<h3><span class="n">2.1</span>Sources and labels</h3>
+<p>Threads come from a product-review crawl after exact deduplication. An LLM labeller marks every review spam or not and gives each spam review a kind. Against three other labellers agreeing, its spam precision is 0.962 / 0.955 / 0.948 in en / es / ja.</p>
+<h3><span class="n">2.2</span>Samples and splits</h3>
+<ul>
+  <li><b>Training.</b> 3,950 threads, 48,310 labelled reviews, 4,280 of them spam.</li>
+  <li><b>Dev.</b> 4,200 threads, 61,540 reviews, used to compare models and set thresholds.</li>
+  <li><b>Test.</b> 1,100 threads, held out and not yet scored.</li>
+  <li>Threads go to a split by product. No product is in two splits.</li>
+</ul>
+
+<!-- A figure contrasting how each arm is fed its data, when the arms differ in what they read. -->
+<h3><span class="n">2.3</span>Two ways to feed a thread</h3>
+<p>Both inputs tokenize each review the same way and close it with a separator token. They differ in how much of the thread the model reads at once (Figure 1).</p>
+<figure class="fig wide">
+  <div class="tw" tabindex="0">
+  <svg viewBox="0 0 760 250" role="img" aria-label="Two ways to feed a thread: one review alone against the whole thread in one pass">
+    <text x="20" y="20" class="tit">Single review</text>
+    <text x="20" y="35" class="sub">reads one review; the rest of the thread is not read</text>
+    <text x="400" y="20" class="tit">Whole thread</text>
+    <text x="400" y="35" class="sub">reads every review in one pass</text>
+    <line x1="380" y1="12" x2="380" y2="238" class="sep-l"/>
+    <rect x="40" y="52" width="180" height="20" class="line-u"/>
+    <rect x="40" y="78" width="160" height="28" class="line-u"/>
+    <rect x="40" y="112" width="172" height="18" class="line-l"/>
+    <rect x="40" y="136" width="150" height="24" class="line-u"/>
+    <rect x="40" y="166" width="180" height="30" class="line-u"/>
+    <rect x="40" y="202" width="120" height="16" class="line-u"/>
+    <text x="232" y="125" class="lab-a">the review scored</text>
+    <text x="20" y="240" class="ax">grey reviews are not read</text>
+    <rect x="420" y="52" width="180" height="20" class="line-c"/>
+    <rect x="420" y="78" width="160" height="28" class="line-c"/>
+    <rect x="420" y="112" width="172" height="18" class="line-c"/>
+    <rect x="420" y="136" width="150" height="24" class="line-c"/>
+    <rect x="420" y="166" width="180" height="30" class="line-c"/>
+    <rect x="420" y="202" width="120" height="16" class="line-c"/>
+    <path d="M608,52 h8 v166 h-8" class="brk-a"/>
+    <text x="624" y="128" class="lab-b">one pass over</text>
+    <text x="624" y="142" class="lab-b">the whole thread</text>
+    <text x="624" y="160" class="lab-a">every review scored</text>
+    <text x="400" y="240" class="ax">up to 8,192 tokens per thread</text>
+  </svg>
+  </div>
+  <figcaption><span class="tn">Figure 1.</span>Two ways to feed a thread, drawn to schema (each bar is one review). Left: the model reads one review and nothing around it. Right: the model reads the whole thread once and scores every review from it.</figcaption>
+</figure>
+
+<h3><span class="n">2.4</span>Threads left out</h3>
+<p>Threads longer than 8,192 tokens are left out of training and scoring for every arm: 64 of 4,200 dev threads, holding 2.9% of dev's spam characters. Every comparison is on the 61,540 reviews that every arm scored.</p>
+</section>
+
+<section>
+<h2><span class="n">3</span>Model architecture</h2>
+<p>The encoder reads the thread with attention in both directions, so the state at a review's separator already holds the reviews before and after it. One linear layer scores it. The decoder sees only the review in front of it (Figure 2).</p>
+<!-- Architecture figure: the new model beside the reference, the same stages top to bottom, real sizes. -->
+<figure class="fig wide">
+  <div class="tw" tabindex="0">
+  <svg viewBox="0 0 760 420" role="img" aria-label="Architecture of the whole-thread encoder beside the single-review decoder">
+    <defs>
+      <marker id="arch-ah" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" class="ah"/></marker>
+      <marker id="arch-ah-a" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" class="ah-a"/></marker>
+    </defs>
+    <text x="20" y="20" class="tit">New: encoder 300M, whole thread</text>
+    <text x="400" y="20" class="tit">Reference: decoder 1B, one review</text>
+    <line x1="380" y1="10" x2="380" y2="410" class="sep-l"/>
+
+    <text x="20" y="46" class="ax">input: the whole thread, ≤ 8,192 tokens</text>
+    <rect x="20" y="54" width="30" height="20" class="tok"/><text x="35" y="68" class="monot" text-anchor="middle">BOS</text>
+    <rect x="52" y="54" width="70" height="20" class="tok"/><text x="87" y="68" class="monot" text-anchor="middle">review 1</text>
+    <rect x="124" y="54" width="16" height="20" class="tok-nl"/>
+    <rect x="142" y="54" width="70" height="20" class="tok"/><text x="177" y="68" class="monot" text-anchor="middle">review 2</text>
+    <rect x="214" y="54" width="16" height="20" class="tok-nl"/>
+    <text x="246" y="68" class="monot" text-anchor="middle">…</text>
+    <rect x="262" y="54" width="70" height="20" class="tok"/><text x="297" y="68" class="monot" text-anchor="middle">review N</text>
+    <rect x="334" y="54" width="16" height="20" class="tok-nl"/>
+    <text x="20" y="90" class="ax">blue: the separator closing each review</text>
+    <path d="M185,96 v16" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="20" y="116" width="330" height="96" rx="3" class="box-a"/>
+    <text x="32" y="136" class="lab-b">Encoder · 12 layers · bidirectional</text>
+    <text x="32" y="154" class="lab">width 768 · 12 heads</text>
+    <text x="32" y="171" class="lab">full fine-tune, lr 3e−5</text>
+    <text x="32" y="188" class="lab">about 300M parameters</text>
+    <path d="M132,212 v26" class="arr-a" marker-end="url(#arch-ah-a)"/>
+    <path d="M222,212 v26" class="arr-a" marker-end="url(#arch-ah-a)"/>
+    <path d="M335,212 v26" class="arr-a" marker-end="url(#arch-ah-a)"/>
+    <rect x="107" y="242" width="50" height="22" class="box-p"/><text x="132" y="257" class="monot" text-anchor="middle">h₁</text>
+    <rect x="197" y="242" width="50" height="22" class="box-p"/><text x="222" y="257" class="monot" text-anchor="middle">h₂</text>
+    <text x="278" y="257" class="monot" text-anchor="middle">…</text>
+    <rect x="310" y="242" width="50" height="22" class="box-p"/><text x="335" y="257" class="monot" text-anchor="middle">h_N</text>
+    <text x="20" y="282" class="ax">one vector per review, seeing the whole thread</text>
+    <path d="M185,288 v16" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="20" y="308" width="330" height="44" rx="3" class="box"/>
+    <text x="32" y="328" class="lab-b">Per review: linear 768 → 1</text>
+    <text x="32" y="344" class="ax">nothing crosses reviews after the encoder</text>
+    <path d="M185,352 v14" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="20" y="370" width="330" height="36" rx="3" class="box-a"/>
+    <text x="32" y="393" class="lab-b">sigmoid → p(spam) for every review</text>
+
+    <text x="400" y="46" class="ax">input: one review, ≤ 1,024 tokens</text>
+    <rect x="400" y="54" width="30" height="20" class="tok"/><text x="415" y="68" class="monot" text-anchor="middle">BOS</text>
+    <rect x="432" y="54" width="90" height="20" class="tok"/><text x="477" y="68" class="monot" text-anchor="middle">review k</text>
+    <rect x="524" y="54" width="16" height="20" class="tok-nl"/>
+    <text x="400" y="90" class="ax">blue: the last token</text>
+    <path d="M532,96 v16" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="400" y="116" width="340" height="96" rx="3" class="box"/>
+    <text x="412" y="136" class="lab-b">Decoder · 18 layers · causal</text>
+    <text x="412" y="154" class="lab">width 2,048 · 8 heads</text>
+    <text x="412" y="171" class="lab">LoRA rank 16, lr 2e−4</text>
+    <text x="412" y="188" class="lab">about 1B parameters</text>
+    <path d="M532,212 v26" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="507" y="242" width="50" height="22" class="box-p"/><text x="532" y="257" class="monot" text-anchor="middle">h_k</text>
+    <text x="400" y="282" class="ax">one vector, seeing only this review</text>
+    <path d="M532,288 v16" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="400" y="308" width="340" height="44" rx="3" class="box"/>
+    <text x="412" y="328" class="lab-b">Head: linear 2,048 → 1</text>
+    <text x="412" y="344" class="ax">no thread context</text>
+    <path d="M532,352 v14" class="arr" marker-end="url(#arch-ah)"/>
+    <rect x="400" y="370" width="340" height="36" rx="3" class="box"/>
+    <text x="412" y="393" class="lab-b">sigmoid → p(spam)</text>
+  </svg>
+  </div>
+  <figcaption><span class="tn">Figure 2.</span>The new model (left) and the reference (right). Both read a review's vector at its last token. In the encoder that vector already holds the reviews around it, so one linear layer scores it; in the decoder it holds only the review itself.</figcaption>
+</figure>
+</section>
+
+<section>
+<h2><span class="n">4</span>Training, optimization and evaluation</h2>
+<h3><span class="n">4.1</span>Optimization</h3>
+<figure class="tbl">
+  <figcaption><span class="tn">Table 4.</span>Training settings of the two main contenders.</figcaption>
+  <div class="tw spec" tabindex="0">
+  <table>
+    <thead><tr><th>Setting</th><th class="l">Encoder 300M, thread</th><th class="l">Decoder 1B, review</th></tr></thead>
+    <tbody>
+<tr><th scope="row">Fine-tuning</th><td class="l">full, bf16 autocast</td><td class="l">LoRA rank 16, alpha 32, on every projection</td></tr>
+<tr><th scope="row">Optimizer</th><td class="l" colspan="2">AdamW, weight decay 0.01; 5% linear warmup, then linear decay to 0; gradient clipping at 1.0</td></tr>
+<tr><th scope="row">Learning rate</th><td class="l">3e−5</td><td class="l">2e−4</td></tr>
+<tr><th scope="row">Loss</th><td class="l" colspan="2">binary cross-entropy on the labelled reviews</td></tr>
+<tr><th scope="row">Batches</th><td class="l" colspan="2">up to 16,384 tokens, three epochs, shuffled</td></tr>
+<tr><th scope="row">Final training loss</th><td class="l">0.041 and 0.044 (seeds 1 and 2)</td><td class="l">0.052 and 0.049</td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+<h3><span class="n">4.2</span>Evaluation measures</h3>
+<dl class="defs">
+  <div><dt>recall@95</dt><dd>The highest spam recall at any threshold where precision is at least 0.95. It decides the bar.</dd></div>
+  <div><dt>PR AUC</dt><dd>Average precision, the main ranking measure. A random scorer's PR AUC equals the spam share.</dd></div>
+  <div><dt>Intervals</dt><dd>90% bootstrap intervals over threads, 1,000 resamples. Two models are compared by a paired bootstrap over the same threads; Δ is the 90% interval of their difference.</dd></div>
+</dl>
+<h3><span class="n">4.3</span>The encoder beats the decoder in every language</h3>
+<p>Table 1 holds the main result. The encoder's PR AUC is higher in every language, with the paired interval above zero in en and ja. Its recall at 95% precision is higher by 0.03 to 0.09, and it clears the bar in ja, where the decoder's lower bound is 0.338.</p>
+<!-- Secondary table: every other arm, plus pending rows. The main contenders repeat here for reference. -->
+<figure class="tbl">
+  <figcaption><span class="tn">Table 5.</span>Every arm, PR AUC on the same 61,540 dev reviews, two seeds averaged.</figcaption>
+  <div class="tw" tabindex="0">
+  <table>
+    <thead><tr><th>Arm</th><th>en</th><th>es</th><th>ja</th></tr></thead>
+    <tbody>
+<tr class="new"><th scope="row">Encoder 300M, thread</th><td><b>0.873</b></td><td><b>0.861</b></td><td><b>0.822</b></td></tr>
+<tr><th scope="row">Decoder 1B, thread</th><td>0.861</td><td>0.855</td><td>0.795</td></tr>
+<tr><th scope="row">Decoder 1B, review</th><td>0.856</td><td>0.851</td><td>0.787</td></tr>
+<tr><th scope="row">Encoder 300M, review</th><td>0.829</td><td>0.818</td><td>0.776</td></tr>
+<tr><th scope="row">Decoder 300M, review</th><td>0.801</td><td>0.794</td><td>0.741</td></tr>
+<tr class="pend"><th scope="row">Encoder 1B, thread</th><td colspan="3" class="l">pending: training, results expected 2026-01-17</td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+</section>
+
+<section>
+<h2><span class="n">5</span>Inference and system considerations</h2>
+<h3><span class="n">5.1</span>Hardware</h3>
+<p>Each run trained and scored on one NVIDIA H100 (80 GB) in bf16, with PyTorch's scaled-dot-product attention.</p>
+<h3><span class="n">5.2</span>Throughput, memory and cost</h3>
+<figure class="tbl">
+  <figcaption><span class="tn">Table 6.</span>Training and scoring speed, one H100 per run. Corpus cost is 2T tokens over scoring tokens per second.</figcaption>
+  <div class="tw" tabindex="0">
+  <table>
+    <thead><tr><th>Arm</th><th>Train tokens/s</th><th>Train time</th><th>Train peak</th><th>Score tokens/s</th><th>Score peak</th><th>Corpus cost</th><th>× budget</th></tr></thead>
+    <tbody>
+<tr class="new"><th scope="row">Encoder 300M, thread</th><td>31.4k</td><td>0.6 h</td><td>18.2 GB</td><td><b>260k</b></td><td>9.8 GB</td><td><b>2.1k GPU-h</b></td><td>0.43×</td></tr>
+<tr><th scope="row">Decoder 1B, review</th><td>22.7k</td><td>0.4 h</td><td>26.5 GB</td><td>80k</td><td>14.2 GB</td><td>6.9k GPU-h</td><td>1.4×</td></tr>
+<tr><th scope="row">Encoder 300M, review</th><td>41.0k</td><td>0.3 h</td><td>12.4 GB</td><td>278k</td><td>6.1 GB</td><td>2.0k GPU-h</td><td>0.40×</td></tr>
+<tr><th scope="row">Decoder 1B, thread</th><td>9.8k</td><td>1.4 h</td><td>41.3 GB</td><td>71k</td><td>21.4 GB</td><td>7.8k GPU-h</td><td>1.6×</td></tr>
+<tr><th scope="row">Decoder 300M, review</th><td>44.6k</td><td>0.3 h</td><td>11.0 GB</td><td>231k</td><td>5.3 GB</td><td>2.4k GPU-h</td><td>0.48×</td></tr>
+    </tbody>
+  </table>
+  </div>
+</figure>
+<!-- Chart: a trade-off drawn to one scale. x(k) = 80 + 64·k for k thousand GPU-hours; y(v) = 260 − (v − 0.78)·1916.67.
+     Labels sit clear of points, the reference line and each other; run the overlap checker after any change. -->
+<figure class="fig wide">
+  <div class="tw" tabindex="0">
+  <svg viewBox="0 0 760 320" role="img" aria-label="PR AUC in English against corpus cost for every arm, with the budget line">
+    <text x="80" y="18" class="ax">PR AUC, en</text>
+    <path d="M80,30 V260 H720" class="axis"/>
+    <line x1="75" y1="221.7" x2="80" y2="221.7" class="tick"/><text x="70" y="225.7" class="ax" text-anchor="end">0.80</text>
+    <line x1="75" y1="125.8" x2="80" y2="125.8" class="tick"/><text x="70" y="129.8" class="ax" text-anchor="end">0.85</text>
+    <line x1="75" y1="30" x2="80" y2="30" class="tick"/><text x="70" y="34" class="ax" text-anchor="end">0.90</text>
+    <line x1="80" y1="260" x2="80" y2="265" class="tick"/><text x="80" y="280" class="ax" text-anchor="middle">0</text>
+    <line x1="208" y1="260" x2="208" y2="265" class="tick"/><text x="208" y="280" class="ax" text-anchor="middle">2k</text>
+    <line x1="336" y1="260" x2="336" y2="265" class="tick"/><text x="336" y="280" class="ax" text-anchor="middle">4k</text>
+    <line x1="464" y1="260" x2="464" y2="265" class="tick"/><text x="464" y="280" class="ax" text-anchor="middle">6k</text>
+    <line x1="592" y1="260" x2="592" y2="265" class="tick"/><text x="592" y="280" class="ax" text-anchor="middle">8k</text>
+    <line x1="720" y1="260" x2="720" y2="265" class="tick"/><text x="720" y="280" class="ax" text-anchor="middle">10k</text>
+    <text x="400" y="306" class="ax" text-anchor="middle">Corpus cost, GPU-hours</text>
+    <line x1="400" y1="30" x2="400" y2="260" class="ref-l"/>
+    <text x="406" y="42" class="ax">budget, 5k GPU-hours</text>
+    <circle cx="214.4" cy="81.75" r="4.5" class="pt-a"/><text x="224" y="85.75" class="lab-a">Encoder 300M, thread</text>
+    <circle cx="208" cy="166.1" r="4.5" class="pt-o"/><text x="218" y="170.1" class="lab">Encoder 300M, review</text>
+    <circle cx="233.6" cy="219.75" r="4.5" class="pt-o"/><text x="243" y="223.75" class="lab">Decoder 300M, review</text>
+    <circle cx="521.6" cy="114.3" r="4.5" class="pt"/><text x="530" y="131" class="lab-b">Decoder 1B, review</text>
+    <circle cx="579.2" cy="104.75" r="4.5" class="pt-o"/><text x="589" y="108.75" class="lab">Decoder 1B, thread</text>
+  </svg>
+  </div>
+  <figcaption><span class="tn">Figure 3.</span>Accuracy against cost. The encoder reading threads is the only arm that is both more accurate than the reference and inside the budget. PR AUC in en, two seeds averaged; cost from Table 6.</figcaption>
+</figure>
+</section>
+
+<section>
+<h2><span class="n">6</span>Reproducibility and interpretation</h2>
+<h3><span class="n">6.1</span>Software, code and data</h3>
+<ul>
+  <li>torch 2.5.1, transformers 4.47.0, peft 0.14.0.</li>
+  <li>Code: <code>scripts/train_review_cls.py</code> on branch <code>review-spam</code>; whole-thread mode is <code>--thread --max-tokens 8192</code>.</li>
+  <li>Runs: one folder per run under <code>runs/review-spam/</code>, each with its config, scores and log.</li>
+  <li>The data is private: labels, scores and excerpts stay in the private bucket and under <code>runs/</code>.</li>
+</ul>
+<h3><span class="n">6.2</span>Interpretation</h3>
+<p>Whether a review is spam often depends on the reviews around it: the same pointer under every complaint, the same praise under every listing. A causal decoder reading one review cannot see that. An encoder reading the thread sees it in every layer, and one linear layer is then enough. That is why a 300M encoder beats a 1B decoder, and why giving the decoder the thread adds little.</p>
+<h3><span class="n">6.3</span>What these results do not show yet</h3>
+<ul>
+  <li><b>Test.</b> Every number is on dev, which also set the thresholds.</li>
+  <li><b>Threads over 8,192 tokens</b>, which hold 2.9% of dev's spam characters.</li>
+  <li><b>The 1B encoder</b>, still training.</li>
+</ul>
+<h3><span class="n">6.4</span>Next steps</h3>
+<ol>
+  <li>Score test once with the encoder's frozen thresholds.</li>
+  <li>Add the 1B encoder when it lands, and choose between the two sizes on accuracy and cost.</li>
+</ol>
+</section>
+
+<!-- Footer: the source file of every table and figure. Say whether the page quotes data. If it does, keep it private. -->
+<footer>
+  <b>Sources.</b> Compare files in <code>runs/review-spam/study/</code>: <code>compare-enc300-thread-vs-dec1b-review.json</code> (Table 1), <code>compare-all-arms.json</code> (Table 5, Figure 3); run records <code>run-*.json</code> (Tables 4 and 6); kinds and excerpts from <code>eval/labels.parquet</code> (Table 2, section 1.4). The examples in section 1 are invented for this skeleton; a real report quotes real labelled data, says so here, and stays private.
+</footer>
+</main>

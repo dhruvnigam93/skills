@@ -52,7 +52,7 @@ Unless the decision is pending, write its entry where and in the form the projec
 
 ### 4. Reports and messages, when asked
 
-Draft the ones the user asks for, each through the skill the project or user has for it (a report, a short summary for chat or email, the tracker's own tool for a comment); with none, write a short draft yourself.
+Draft the ones the user asks for, each through the skill the project or user has for it (a report, a short summary for chat or email, the tracker's own tool for a comment); with none, write a short draft yourself. A full write-up of the study goes through `/flow:experiment-report`, unless the project has its own report skill.
 - The source is the round design and its numbers file (or the project's own results file), never the chat. Carry Results' words unchanged: an interval that spans zero stays "not distinguishable".
 - A study that already has a report gets that report updated, at its link (from the record, else ask); write the link under Decision.
 - Drafts, not sends: nothing is posted, sent or shared until the user says so. Before anything that quotes data leaves the repo, check the project's data rules and who can see the destination.
