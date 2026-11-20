@@ -1,6 +1,6 @@
 {
   "name": "flow",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Alignment-first AI coding workflow: you own the design and sign off on every interface; the agent owns the implementation. With an experiment track for ML work: one question, your predictions on record, a frozen design, gated runs, a recorded decision and a paper-style report. And a review pass for agent-written technical prose.",
   "author": {
     "name": "Dhruv Nigam",

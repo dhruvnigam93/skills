@@ -89,6 +89,8 @@ Bad questions:
 - "Soft-delete or hard-delete? Recommended: soft-delete." — a recommendation anchors the user.
 - Three questions in one message or one tool call — the user answers the first and skims the rest.
 
+**A choice between designs.** When a question's options are different designs, not a fact or a value, present them before asking in the format of [references/presenting-choices.md](references/presenting-choices.md): background for a reader who knows the repo only at a high level, the key considerations, one section per option, then the comparison table.
+
 **The "enough" stop-gap.** When the user says "enough", "just go", or "I trust your judgment":
 1. Mark all remaining unverified assumptions as ASSUMED
 2. State the safe default for each (never leave it implicit)
@@ -185,7 +187,7 @@ Every question this skill asks — clarifying questions, picks between options, 
 2. **One question at a time.** One question per message and per tool call, even though the tool takes four. Wait for the answer, then choose the next question in its light.
 3. **No recommended option.** Never label an option "Recommended" or "default", never put your favorite first, and never say which you would pick — not in the question, the options or the text around them. If the user asks what you would pick, answer.
 4. **Use the tool well.**
-   - `question`: one to three concrete sentences. What the user needs to decide goes here, not in a wall of text before the call.
+   - `question`: one to three concrete sentences naming what the user needs to decide. Context for a choice between designs goes in the message before the call (**A choice between designs**, Phase 2).
    - `header`: a chip of 12 characters at most naming the topic.
    - `options`: 2–4 real, mutually exclusive answers with short labels. Each `description` says what choosing it means for the work — what it changes, what it costs, what it rules out — so the user can decide without a recommendation.
    - `multiSelect: true` when several answers can hold at once (for example, which items apply).
